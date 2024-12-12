@@ -14,7 +14,7 @@ func WithTouchArgs(args []string) internals.OptionsTouchFunc {
 var touchCmd = &cobra.Command{
 	Use:   "touch",
 	Short: "Creates an empty collection in your database",
-	Long: `Usage: iza touch ...DATABASE/COLLECTION...
+	Long: `Usage: iza touch DATABASE/COLLECTION...
 
 If value for the database is empty, then it will be added to test database.
 If the database doesn't exist, then it will be created.
