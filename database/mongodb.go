@@ -22,12 +22,14 @@ func GetMongoClient() (*mongo.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
-			return
-		}
-	}()
-
 	return client, nil
+}
+
+// DisconnectMongoClient disconnects the MongoDB client
+func DisconnectMongoClient(client *mongo.Client) error {
+	err := client.Disconnect(context.Background())
+	if err != nil {
+		return err
+	}
+	return nil
 }

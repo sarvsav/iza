@@ -37,6 +37,12 @@ func Touch(touchOptions ...OptionsTouchFunc) error {
 	}
 
 	client, err := database.GetMongoClient()
+	defer func() {
+		if err := database.DisconnectMongoClient(client); err != nil {
+			touchCmd.Logger.Error("Failed to disconnect from MongoDB", "error", err)
+		}
+	}()
+
 	if err != nil {
 		touchCmd.Logger.Error("Failed to connect to MongoDB", "error", err)
 		return err
