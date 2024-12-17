@@ -37,7 +37,7 @@ func Get() (v Version) {
 	v.Tag = tag
 	v.Commit = commit
 	v.Date = time.Unix(dt, 0).Format("20060102150405")
-	v.Dirty = dirty != ""
+	v.Dirty = dirty == "true"
 	dirtySuffix := ""
 	if v.Dirty {
 		dirtySuffix = "-dirty"
