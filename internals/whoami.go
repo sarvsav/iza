@@ -43,7 +43,7 @@ func WhoAmI(whoAmIOptions ...OptionsWhoAmIFunc) error {
 	}
 
 	info := bson.M{}
-	if err := client.Database("admin").RunCommand(context.TODO(), bson.D{{"connectionStatus", 1}}).Decode(&info); err != nil {
+	if err := client.Database("admin").RunCommand(context.TODO(), bson.D{{Key: "connectionStatus", Value: 1}}).Decode(&info); err != nil {
 		whoAmICmd.Logger.Error("Failed to get connection status", "error", err)
 		return err
 	}
