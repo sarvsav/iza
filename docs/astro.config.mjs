@@ -10,19 +10,35 @@ export default defineConfig({
 			social: {
 				github: 'https://github.com/sarvsav/iza',
 				twitter: 'https://twitter.com/sarvsav',
+				// codeberg: 'https://codeberg.org/knut/examples',
+				// discord: 'https://astro.build/chat',
+				// gitlab: 'https://gitlab.com/delucis',
+				// linkedin: 'https://www.linkedin.com/company/astroinc',
+				// mastodon: 'https://m.webtoo.ls/@astro',
+				// threads: 'https://www.threads.net/@nmoodev',
+				// twitch: 'https://www.twitch.tv/bholmesdev',
+				// 'x.com': 'https://x.com/astrodotbuild',
+				// youtube: 'https://youtube.com/@astrodotbuild',
 			},
 			description: 'Iza is a tool to do operations on your databases, cicd, artfactory with linux commands',
 			sidebar: [
 				{
-					label: 'Guides',
+					label: 'Getting started',
 					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Getting started', slug: 'guides/getting-started' },
+						{ label: 'Installation', slug: 'getting-started/installation' },
+						{ label: 'Configuration', slug: 'getting-started/configuration' },
 					],
 				},
 				{
-					label: 'Reference',
-					autogenerate: { directory: 'reference' },
+					label: 'Knowledge Base',
+					items: [
+						{ label: 'Commands', slug: 'knowledge-base/commands' },
+						{ label: 'Variables', slug: 'knowledge-base/variables' },
+					],
+				},
+				{
+					label: 'Contributing',
+					autogenerate: { directory: 'contribute'},
 				},
 			],
 			logo: {
