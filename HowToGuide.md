@@ -8,6 +8,7 @@ A guide that will help try to answer the questions on how to work with project.
 	- [Table of Contents](#table-of-contents)
 	- [How to add a new command](#how-to-add-a-new-command)
 		- [Adding touch command](#adding-touch-command)
+	- [Application](#application)
 
 ## How to add a new command
 
@@ -103,3 +104,32 @@ And, that's it. The `touch` command is now ready to be used.
 $ iza touch dbName/collectionName
 ```
 
+## Application
+
+Applicatopn file holds the list of services to be started or defined.
+
+iza/internals/app/app.go
+
+As of today, we have two services.
+
+Cicd
+	devops
+		Jenkins
+		Teamcity
+		GitHub Actions
+Datastore
+	dbstore
+		mongodb
+		postgres
+
+The app struct has services for devops or dbstore or in the future, can be extended for other things like artifactory.
+This service will call the client interface with function to get the results.
+
+The services consists of client, and this client is an interface and can easily be switched from based on infrastructure.
+
+In the main.go the actual client(s) is/are created with NewClient and passed to service using NewService function. And,
+as clients are interface to services, so they can be of any type.
+
+The whole app struct is then passed to the cobra cli, and used in all the commands.
+
+These commands then directly call the functions exposed to the clients using the service.
