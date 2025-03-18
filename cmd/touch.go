@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"github.com/sarvsav/iza/internals"
-	"github.com/sarvsav/iza/models"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
-func WithTouchArgs(args []string) internals.OptionsTouchFunc {
-	return func(c *models.TouchOptions) error { c.Args = args; return nil }
-}
+// func WithTouchArgs(args []string) internals.OptionsTouchFunc {
+// 	return func(c *models.TouchOptions) error { c.Args = args; return nil }
+// }
 
 // touchCmd represents the touch command
 var touchCmd = &cobra.Command{
@@ -29,7 +29,29 @@ It will create three collections:
  2. testCollection02 in the test database,
  3. and sampleCollection03 in the sampleDb.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		internals.Touch(WithTouchArgs(args))
+		service, err := cmd.Flags().GetString("service")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		switch service {
+		case "cicd":
+			result, err := application.CiCdService.Touch()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println(result)
+		case "datastore":
+			result, err := application.DataStoreService.Touch()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println(result)
+		default:
+			fmt.Println("Service not found")
+		}
 	},
 }
 

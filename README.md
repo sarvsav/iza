@@ -102,6 +102,8 @@ The details about the project can be found on [project website](https://sarvsav.
 <!-- GETTING STARTED -->
 ## Getting Started
 
+Describe your software architecture design as life, not the buildings. Software architecture is very relatable to life, as it has dynamics, meaning, purpose and lot of things. Your software exists for greater good.
+
 ### Prerequisites
 
 ### Installation

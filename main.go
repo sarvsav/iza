@@ -67,7 +67,7 @@ func main() {
 	ctx := cuecontext.New()
 	instances := load.Instances([]string{"./cue/dev"}, nil)
 
-	log.Error(context.Background(), "instances", instances)
+	//log.Error(context.Background(), "instances", instances)
 
 	if len(instances) == 0 {
 		log.Error(context.Background(), "no instances found")

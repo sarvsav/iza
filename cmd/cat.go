@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"github.com/sarvsav/iza/internals"
-	"github.com/sarvsav/iza/models"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
-func WithCatArgs(args []string) internals.OptionsCatFunc {
-	return func(c *models.CatOptions) error { c.Args = args; return nil }
-}
+// func WithCatArgs(args []string) internals.OptionsCatFunc {
+// 	return func(c *models.CatOptions) error { c.Args = args; return nil }
+// }
 
 // catCmd represents the cat command
 var catCmd = &cobra.Command{
@@ -31,7 +31,27 @@ It will display the contents of the documents from the following collections:
 
 You can provide multiple arguments to read documents from multiple collections at once.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		internals.Cat(WithCatArgs(args))
+		service, err := cmd.Flags().GetString("service")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		switch service {
+		case "cicd":
+			err := application.CiCdService.Cat()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		case "datastore":
+			err := application.DataStoreService.Cat()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		default:
+			fmt.Println("Service not found")
+		}
 	},
 }
 

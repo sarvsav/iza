@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"github.com/sarvsav/iza/internals"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +14,29 @@ var whoamiCmd = &cobra.Command{
 
 Prints the current logged in user.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		internals.WhoAmI()
+		service, err := cmd.Flags().GetString("service")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		switch service {
+		case "cicd":
+			result, err := application.CiCdService.WhoAmI()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println(result)
+		case "datastore":
+			result, err := application.DataStoreService.WhoAmI()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println(result)
+		default:
+			fmt.Println("Service not found")
+		}
 	},
 }
 
