@@ -26,3 +26,7 @@ go.work.sum
 
 # Binaries from goreleaser
 dist/
+
+# Adding editor config files
+.idea/
+.vscode/

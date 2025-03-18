@@ -1,12 +1,14 @@
 package cmd
 
 import (
-	"github.com/sarvsav/iza/internals"
+	"fmt"
+
+	"github.com/sarvsav/iza/dbstore"
 	"github.com/sarvsav/iza/models"
 	"github.com/spf13/cobra"
 )
 
-func WithDuArgs(args []string) internals.OptionsDuFunc {
+func WithDuArgs(args []string) dbstore.OptionsDuFunc {
 	return func(c *models.DuOptions) error { c.Args = args; return nil }
 }
 
@@ -19,7 +21,28 @@ var duCmd = &cobra.Command{
 Prints the disk usage of the specified database or collection.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		internals.Du(WithDuArgs(args))
+		service, err := cmd.Flags().GetString("service")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		switch service {
+		case "cicd":
+			result, err := application.CiCdService.Du()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println(result)
+		case "datastore":
+			err := application.DataStoreService.Du(WithDuArgs(args))
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		default:
+			fmt.Println("Service not found")
+		}
 	},
 }
 

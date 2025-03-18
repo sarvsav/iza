@@ -22,17 +22,109 @@ THE SOFTWARE.
 package main
 
 import (
-	"log"
+	"context"
+	"fmt"
+	"os"
 
+	"cuelang.org/go/cue"
+	"cuelang.org/go/cue/cuecontext"
+	"cuelang.org/go/cue/load"
 	"github.com/joho/godotenv"
 	"github.com/sarvsav/iza/cmd"
+	"github.com/sarvsav/iza/dbstore"
+	"github.com/sarvsav/iza/devops"
+	"github.com/sarvsav/iza/foundation/logger"
+	"github.com/sarvsav/iza/internals/app"
+	"github.com/sarvsav/iza/internals/cicd"
+	"github.com/sarvsav/iza/internals/datastore"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+
+	// -------------------------------------------------------------------------
+	// Setup logger
+	var log *logger.Logger
+
+	events := logger.Events{
+		Error: func(ctx context.Context, r logger.Record) { log.Info(ctx, "******* SEND ALERT ******") },
 	}
 
-	cmd.Execute()
+	traceIDFn := func(ctx context.Context) string {
+		return "00000000-0000-0000-0000-000000000000"
+	}
+
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "IZA", traceIDFn, events)
+
+	// -------------------------------------------------------------------------
+	// Load environment variables
+	err := godotenv.Load()
+	if err != nil {
+		log.Error(context.Background(), "Error loading .env file")
+	}
+
+	// -------------------------------------------------------------------------
+	// Load CUE configuration
+	ctx := cuecontext.New()
+	instances := load.Instances([]string{"./cue/dev"}, nil)
+
+	//log.Error(context.Background(), "instances", instances)
+
+	if len(instances) == 0 {
+		log.Error(context.Background(), "no instances found")
+	}
+
+	instance := instances[0] // If there are multiple files then need to iterate
+
+	if instance.Err != nil {
+		log.Error(context.Background(), "Error building cue value: %v", instance.Err)
+	}
+
+	value := ctx.BuildInstance(instance)
+	if value.Err() != nil {
+		log.Error(context.Background(), "Error building CUE value: %v", value.Err())
+	}
+	fmt.Printf("%v\n", value)
+
+	port := value.LookupPath(cue.ParsePath("port"))
+	databaseName := value.LookupPath(cue.ParsePath("database.name"))
+	databaseHost := value.LookupPath(cue.ParsePath("database.host"))
+
+	if port.Err() != nil {
+		log.Error(context.Background(), "Error reading port: %v", port.Err())
+	}
+
+	if databaseName.Err() != nil {
+		log.Error(context.Background(), "Error reading database name: %v", databaseName.Err())
+	}
+
+	if databaseHost.Err() != nil {
+		log.Error(context.Background(), "Error reading database host: %v", databaseHost.Err())
+	}
+
+	portInt, _ := port.Int64()
+	databaseNameStr, _ := databaseName.String()
+	databaseHostStr, _ := databaseHost.String()
+
+	fmt.Printf("Port: %d\n", portInt)
+	fmt.Printf("Database Name: %s\n", databaseNameStr)
+	fmt.Printf("Database Host: %s\n", databaseHostStr)
+
+	// 4. Validate the CUE data (optional but recommended).
+	if err := value.Validate(); err != nil {
+		log.Error(context.Background(), "CUE validation error: %v", err)
+	}
+
+	// -------------------------------------------------------------------------
+	// Setup application
+	jenkinsClient := devops.NewJenkinsClient("user", "some-api-token")
+	mongoClient := dbstore.NewMongoClient("user", "some-api-token")
+	app := &app.Application{
+		CiCdService:      cicd.NewCiCdService(jenkinsClient, log),
+		DataStoreService: datastore.NewDataStoreService(mongoClient, log),
+		Logger:           log,
+	}
+
+	// -------------------------------------------------------------------------
+	// Execute the command
+	cmd.Execute(app)
 }
