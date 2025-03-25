@@ -39,6 +39,9 @@ import (
 	"github.com/sarvsav/iza/internals/datastore"
 )
 
+// for cue configuration
+var requiredKeys = []string{"database", "artifactory", "ci-tools"}
+
 func main() {
 
 	// -------------------------------------------------------------------------
@@ -83,31 +86,64 @@ func main() {
 	if value.Err() != nil {
 		log.Error(context.Background(), "Error building CUE value: %v", value.Err())
 	}
-	fmt.Printf("%v\n", value)
-
-	port := value.LookupPath(cue.ParsePath("port"))
-	databaseName := value.LookupPath(cue.ParsePath("database.name"))
-	databaseHost := value.LookupPath(cue.ParsePath("database.host"))
-
-	if port.Err() != nil {
-		log.Error(context.Background(), "Error reading port: %v", port.Err())
+	// Extract top-level "config" field
+	config := value.LookupPath(cue.ParsePath("config"))
+	if !config.Exists() {
+		log.Info(context.Background(), "No 'config' field found in CUE file")
 	}
 
-	if databaseName.Err() != nil {
-		log.Error(context.Background(), "Error reading database name: %v", databaseName.Err())
+	// Validate required keys
+	for _, key := range requiredKeys {
+		if !config.LookupPath(cue.ParsePath(key)).Exists() {
+			log.Info(context.Background(), "⚠️ Warning: Section '%s' is missing in the config", key)
+		} else {
+			log.Info(context.Background(), "✅ Section '%s' is present", key)
+		}
 	}
 
-	if databaseHost.Err() != nil {
-		log.Error(context.Background(), "Error reading database host: %v", databaseHost.Err())
+	// Extract and print database entries
+	fmt.Println("\n📌 Database Instances:")
+	databases := config.LookupPath(cue.ParsePath("database"))
+	if databases.Exists() {
+		iter, _ := databases.Fields()
+		for iter.Next() {
+			selector := iter.Selector()
+			fmt.Printf("  - %s: %v\n", selector.String(), iter.Value())
+
+		}
 	}
 
-	portInt, _ := port.Int64()
-	databaseNameStr, _ := databaseName.String()
-	databaseHostStr, _ := databaseHost.String()
+	// Extract and print Artifactory entries
+	fmt.Println("\n📌 Artifactory Instances:")
+	artifactory := config.LookupPath(cue.ParsePath("artifactory"))
+	if artifactory.Exists() {
+		iter, _ := artifactory.Fields()
+		for iter.Next() {
+			selector := iter.Selector()
+			fmt.Printf("  - %s: %v\n", selector.String(), iter.Value())
 
-	fmt.Printf("Port: %d\n", portInt)
-	fmt.Printf("Database Name: %s\n", databaseNameStr)
-	fmt.Printf("Database Host: %s\n", databaseHostStr)
+		}
+	}
+
+	// Extract and print CI/CD tool entries
+	fmt.Println("\n📌 CI/CD Tool Instances:")
+	ciTools := config.LookupPath(cue.ParsePath("ci_tools"))
+	if ciTools.Exists() {
+		iter, _ := ciTools.Fields()
+		for iter.Next() {
+			selector := iter.Selector()
+			fmt.Printf("  - %s: %v\n", selector.String(), iter.Value())
+
+		}
+	}
+
+	// Extract the full JSON configuration for debugging
+	jsonData, err := config.MarshalJSON()
+	if err != nil {
+		log.Error(context.Background(), "Error marshalling CUE to JSON: %v", err)
+	}
+	fmt.Println("\n📌 Full Extracted Configuration:")
+	fmt.Println(string(jsonData))
 
 	// 4. Validate the CUE data (optional but recommended).
 	if err := value.Validate(); err != nil {

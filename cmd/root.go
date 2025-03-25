@@ -61,8 +61,28 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println("Error getting user home directory:", err)
+		os.Exit(1)
+	}
+
+	logDir := userHomeDir + "/.iza/logs"
+	logFileName := "iza_" + version.Get().String() + ".log"
+
+	// Create log directory if it does not exist
+	if _, err := os.Stat(logDir); os.IsNotExist(err) {
+		err := os.MkdirAll(logDir, 0755)
+		if err != nil {
+			fmt.Println("Error creating log directory:", err)
+			os.Exit(1)
+		}
+	}
+
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.iza.yaml)")
 	rootCmd.PersistentFlags().StringP("service", "s", "datastore", "Default datastore service to interact with")
+	rootCmd.PersistentFlags().StringP("log-file", "F", logFileName, "File to save the logs (optional), default name is iza_version_datetime.log")
+	rootCmd.PersistentFlags().StringP("log-dir", "L", logDir, "Directory to save the logs (optional), default is $HOME/.iza/logs")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
