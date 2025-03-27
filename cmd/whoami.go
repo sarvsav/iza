@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -16,26 +17,28 @@ Prints the current logged in user.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		service, err := cmd.Flags().GetString("service")
 		if err != nil {
-			fmt.Println(err)
+			application.Logger.Error(context.Background(), "Failed to get service", "service", service, "error", err)
 			return
 		}
 		switch service {
 		case "cicd":
 			result, err := application.CiCdService.WhoAmI()
 			if err != nil {
-				fmt.Println(err)
+				application.Logger.Error(context.Background(), "Failed to get current user", "service", service, "error", err)
 				return
 			}
+			application.Logger.Debug(context.Background(), "success", "service", service, "result", result)
 			fmt.Println(result)
 		case "datastore":
 			result, err := application.DataStoreService.WhoAmI()
 			if err != nil {
-				fmt.Println(err)
+				application.Logger.Error(context.Background(), "Failed to get current user", "service", service, "error", err)
 				return
 			}
-			fmt.Println(result)
+			application.Logger.Debug(context.Background(), "success", "service", service, "result", result)
+			fmt.Println(result.Username)
 		default:
-			fmt.Println("Service not found")
+			application.Logger.Warn(context.Background(), "Unknown service", "service", service)
 		}
 	},
 }

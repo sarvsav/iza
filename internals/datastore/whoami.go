@@ -1,11 +1,15 @@
 package datastore
 
+import (
+	"github.com/sarvsav/iza/models"
+)
+
 // WhoAmI returns the username of the current user from the datastore.
-func (ds *DataStoreService) WhoAmI() (string, error) {
-	username, err := ds.dataStore.WhoAmI()
+func (ds *DataStoreService) WhoAmI() (models.WhoAmIResponse, error) {
+	result, err := ds.dataStore.WhoAmI()
 	if err != nil {
-		return "", err
+		return models.WhoAmIResponse{}, err
 	}
 
-	return username, nil
+	return result, nil
 }
