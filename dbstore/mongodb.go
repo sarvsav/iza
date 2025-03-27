@@ -10,91 +10,85 @@ import (
 	"strings"
 
 	"github.com/sarvsav/iza/database"
+	"github.com/sarvsav/iza/foundation/logger"
 	"github.com/sarvsav/iza/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type mongoClient struct {
-	userName string
-	apiToken string
+	mc  *mongo.Client
+	log *logger.Logger
 }
 
-func NewMongoClient(user, apiToken string) *mongoClient {
+func NewMongoClient(mc *mongo.Client, log *logger.Logger) *mongoClient {
 	return &mongoClient{
-		userName: user,
-		apiToken: apiToken,
+		mc:  mc,
+		log: log,
 	}
 }
 
 // WhoAmI is equivalent to the whoami command.
 // It prints the current logged in user.
-func (m *mongoClient) WhoAmI(whoAmIOptions ...OptionsWhoAmIFunc) (string, error) {
+func (m *mongoClient) WhoAmI(whoAmIOptions ...OptionsWhoAmIFunc) (models.WhoAmIResponse, error) {
+
+	var username string
+
 	whoAmICmd := &models.WhoAmIOptions{
-		Args:   []string{},
-		Logger: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})),
+		Args: []string{},
 	}
 
 	for _, opt := range whoAmIOptions {
 		if err := opt(whoAmICmd); err != nil {
-			return "", err
+			return models.WhoAmIResponse{}, err
 		}
 	}
 
-	whoAmICmd.Logger.Debug("provided command with options", "args", whoAmICmd.Args)
-
-	client, err := database.GetMongoClient()
-	defer func() {
-		if err := database.DisconnectMongoClient(client); err != nil {
-			whoAmICmd.Logger.Error("Failed to disconnect from MongoDB", "error", err)
-		}
-	}()
-
-	if err != nil {
-		whoAmICmd.Logger.Error("Failed to connect to MongoDB", "error", err)
-		return "", err
-	}
+	m.log.Debug(context.Background(), "provided options", "args", whoAmICmd.Args)
 
 	info := bson.M{}
-	if err := client.Database("admin").RunCommand(context.TODO(), bson.D{{Key: "connectionStatus", Value: 1}}).Decode(&info); err != nil {
-		whoAmICmd.Logger.Error("Failed to get connection status", "error", err)
-		return "", err
+	if err := m.mc.Database("admin").RunCommand(context.TODO(), bson.D{{Key: "connectionStatus", Value: 1}}).Decode(&info); err != nil {
+		m.log.Error(context.Background(), "Failed to get connection status", "error", err)
+		return models.WhoAmIResponse{}, err
 	}
 
 	// Accessing "authenticatedUsers"
 	authInfo, ok := info["authInfo"].(bson.M)
 	if !ok {
-		whoAmICmd.Logger.Error("authInfo is not of type bson.M")
-		return "", errors.New("authInfo is not of type bson.M")
+		m.log.Error(context.Background(), "authInfo is not of type bson.M")
+		return models.WhoAmIResponse{}, errors.New("authInfo is not of type bson.M")
 	}
 
 	authenticatedUsers, ok := authInfo["authenticatedUsers"].(primitive.A)
 	if !ok {
-		whoAmICmd.Logger.Error("authenticatedUsers is not of type []interface{}", "authenticatedUsers", authInfo["authenticatedUsers"])
-		return "", errors.New("authenticatedUsers is not of type []interface{}")
+		m.log.Error(context.Background(), "authenticatedUsers is not of type []interface{}", "authenticatedUsers", authInfo["authenticatedUsers"])
+		return models.WhoAmIResponse{}, errors.New("authenticatedUsers is not of type []interface{}")
 	}
 
 	// Accessing user details
 	if len(authenticatedUsers) > 0 {
 		user, ok := authenticatedUsers[0].(bson.M)
 		if !ok {
-			whoAmICmd.Logger.Error("first element in authenticatedUsers is not of type bson.M")
-			return "", errors.New("first element in authenticatedUsers is not of type bson.M")
+			m.log.Error(context.Background(), "first element in authenticatedUsers is not of type bson.M")
+			return models.WhoAmIResponse{}, errors.New("first element in authenticatedUsers is not of type bson.M")
 		}
 
 		// Extract the "user" field
-		username, ok := user["user"].(string)
+		username, ok = user["user"].(string)
 		if ok {
-			whoAmICmd.Logger.Info("Authenticated", "username", username)
+			m.log.Debug(context.Background(), "Authenticated", "username", username)
 		} else {
-			whoAmICmd.Logger.Error("User field is not a string or does not exist")
+			m.log.Error(context.Background(), "User field is not a string or does not exist")
 		}
 	} else {
-		whoAmICmd.Logger.Error("authenticatedUsers is empty")
+		m.log.Error(context.Background(), "authenticatedUsers is empty")
 	}
 
-	return "", nil
+	return models.WhoAmIResponse{
+		Username: username,
+	}, nil
 }
 
 func (m mongoClient) Ls(lsOptions ...OptionsLsFunc) ([]string, error) {

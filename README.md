@@ -28,7 +28,7 @@
 <h3 align="center">Iza</h3>
 
   <p align="center">
-    Streamline MongoDB operations with Linux inspired written in Go!
+    Streamline platform operations with Linux inspired commands written in Go!
     <br />
     <a href="https://sarvsav.github.io/iza/"><strong>📘 Explore the docs  »</strong></a>
     <br />
@@ -106,10 +106,26 @@ Describe your software architecture design as life, not the buildings. Software 
 
 ### Prerequisites
 
+You need to have Go installed on your machine to run the project.
+
 ### Installation
+
+`iza` is distributed as single binary with no dependencies and can be installed using the `go install` command.
+
+```sh
+go install github.com/sarvsav/iza/cmd/iza@latest
+```
 
 <!-- USAGE EXAMPLES -->
 ## Usage
+
+Running `whoami` for mongodb and log level as debug.
+
+```sh
+iza whoami
+```
+
+![whoami_mongo_debug](./assets/recordings/whoami_mongo_debug.gif)
 
 _For more information, please refer to the [Documentation](https://sarvsav.github.io/iza/)_
 
@@ -143,7 +159,9 @@ Project Link: [https://github.com/sarvsav/iza](https://github.com/sarvsav/iza)
 <!-- CONTRIBUTORS -->
 ## Contributors
 
-Big thanks to our contributors.
+Big thanks to our contributors. Contributions of any kind are welcome!
+
+Issues with the label `good first issue` are a good place to start.
 
 <a href="https://github.com/sarvsav/iza/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=sarvsav/iza" />

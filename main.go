@@ -23,7 +23,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"cuelang.org/go/cue"
@@ -31,6 +30,7 @@ import (
 	"cuelang.org/go/cue/load"
 	"github.com/joho/godotenv"
 	"github.com/sarvsav/iza/cmd"
+	"github.com/sarvsav/iza/database"
 	"github.com/sarvsav/iza/dbstore"
 	"github.com/sarvsav/iza/devops"
 	"github.com/sarvsav/iza/foundation/logger"
@@ -48,21 +48,25 @@ func main() {
 	// Setup logger
 	var log *logger.Logger
 
+	// Warn and Error are custom events and called when the log calls Warn or Error
+	// For example, if log.Warn is called, then the function defined in Warn will be called
+	// This is useful for sending alerts or warnings to external systems
 	events := logger.Events{
-		Error: func(ctx context.Context, r logger.Record) { log.Info(ctx, "******* SEND ALERT ******") },
+		Warn:  func(ctx context.Context, r logger.Record) { log.Info(ctx, "******* Warning ******") },
+		Error: func(ctx context.Context, r logger.Record) { log.Info(ctx, "******* SEND PAGER ******") },
 	}
 
 	traceIDFn := func(ctx context.Context) string {
 		return "00000000-0000-0000-0000-000000000000"
 	}
 
-	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "IZA", traceIDFn, events)
+	log = logger.NewWithEvents(os.Stdout, logger.LevelDebug, "IZA", traceIDFn, events)
 
 	// -------------------------------------------------------------------------
 	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
-		log.Error(context.Background(), "Error loading .env file")
+		log.Error(context.Background(), "Error loading .env file", "error", err)
 	}
 
 	// -------------------------------------------------------------------------
@@ -70,90 +74,91 @@ func main() {
 	ctx := cuecontext.New()
 	instances := load.Instances([]string{"./cue/dev"}, nil)
 
-	//log.Error(context.Background(), "instances", instances)
-
 	if len(instances) == 0 {
-		log.Error(context.Background(), "no instances found")
+		log.Error(context.Background(), "no cue instances found", "location", "./cue/dev")
 	}
 
 	instance := instances[0] // If there are multiple files then need to iterate
 
 	if instance.Err != nil {
-		log.Error(context.Background(), "Error building cue value: %v", instance.Err)
+		log.Error(context.Background(), "Error building cue value", "error", instance.Err)
 	}
 
 	value := ctx.BuildInstance(instance)
 	if value.Err() != nil {
-		log.Error(context.Background(), "Error building CUE value: %v", value.Err())
+		log.Error(context.Background(), "Error building cue value", "error", value.Err())
 	}
 	// Extract top-level "config" field
 	config := value.LookupPath(cue.ParsePath("config"))
 	if !config.Exists() {
-		log.Info(context.Background(), "No 'config' field found in CUE file")
+		log.Error(context.Background(), "No 'config' field found in CUE file")
 	}
 
 	// Validate required keys
 	for _, key := range requiredKeys {
 		if !config.LookupPath(cue.ParsePath(key)).Exists() {
-			log.Info(context.Background(), "⚠️ Warning: Section '%s' is missing in the config", key)
+			log.Info(context.Background(), "missing in the cue config", "section", key)
 		} else {
-			log.Info(context.Background(), "✅ Section '%s' is present", key)
+			log.Debug(context.Background(), "section: "+key+" found")
 		}
 	}
 
 	// Extract and print database entries
-	fmt.Println("\n📌 Database Instances:")
 	databases := config.LookupPath(cue.ParsePath("database"))
 	if databases.Exists() {
 		iter, _ := databases.Fields()
 		for iter.Next() {
 			selector := iter.Selector()
-			fmt.Printf("  - %s: %v\n", selector.String(), iter.Value())
-
+			log.Debug(context.Background(), "database entry", "selector", selector.String(), "value", iter.Value())
 		}
 	}
 
 	// Extract and print Artifactory entries
-	fmt.Println("\n📌 Artifactory Instances:")
 	artifactory := config.LookupPath(cue.ParsePath("artifactory"))
 	if artifactory.Exists() {
 		iter, _ := artifactory.Fields()
 		for iter.Next() {
 			selector := iter.Selector()
-			fmt.Printf("  - %s: %v\n", selector.String(), iter.Value())
-
+			log.Debug(context.Background(), "artifactory entry", "selector", selector.String(), "value", iter.Value())
 		}
 	}
 
 	// Extract and print CI/CD tool entries
-	fmt.Println("\n📌 CI/CD Tool Instances:")
 	ciTools := config.LookupPath(cue.ParsePath("ci_tools"))
 	if ciTools.Exists() {
 		iter, _ := ciTools.Fields()
 		for iter.Next() {
 			selector := iter.Selector()
-			fmt.Printf("  - %s: %v\n", selector.String(), iter.Value())
-
+			log.Debug(context.Background(), "ci_tools entry", "selector", selector.String(), "value", iter.Value())
 		}
 	}
 
 	// Extract the full JSON configuration for debugging
 	jsonData, err := config.MarshalJSON()
 	if err != nil {
-		log.Error(context.Background(), "Error marshalling CUE to JSON: %v", err)
+		log.Error(context.Background(), "Error marshalling CUE to JSON", "error", err)
 	}
-	fmt.Println("\n📌 Full Extracted Configuration:")
-	fmt.Println(string(jsonData))
 
-	// 4. Validate the CUE data (optional but recommended).
+	log.Debug(context.Background(), "CUE configuration", "json", string(jsonData))
+
+	// Validate the CUE data (optional but recommended).
 	if err := value.Validate(); err != nil {
-		log.Error(context.Background(), "CUE validation error: %v", err)
+		log.Error(context.Background(), "CUE validation error", "error", err)
 	}
+
+	// -------------------------------------------------------------------------
+	// Get mongo client
+	client, err := database.GetMongoClient()
+	defer func() {
+		if err := database.DisconnectMongoClient(client); err != nil {
+			log.Error(context.Background(), "Failed to disconnect from MongoDB", "error", err)
+		}
+	}()
 
 	// -------------------------------------------------------------------------
 	// Setup application
 	jenkinsClient := devops.NewJenkinsClient("user", "some-api-token")
-	mongoClient := dbstore.NewMongoClient("user", "some-api-token")
+	mongoClient := dbstore.NewMongoClient(client, log)
 	app := &app.Application{
 		CiCdService:      cicd.NewCiCdService(jenkinsClient, log),
 		DataStoreService: datastore.NewDataStoreService(mongoClient, log),

@@ -1,6 +1,8 @@
 package dbstore
 
-import "github.com/sarvsav/iza/models"
+import (
+	"github.com/sarvsav/iza/models"
+)
 
 type OptionsWhoAmIFunc func(c *models.WhoAmIOptions) error
 type OptionsLsFunc func(c *models.LsOptions) error
@@ -12,6 +14,6 @@ type Client interface {
 	Du(duOptions ...OptionsDuFunc) error
 	Ls(lsOptions ...OptionsLsFunc) ([]string, error)
 	Touch(touchOptions ...OptionsTouchFunc) (string, error)
-	WhoAmI(whoAmIOptions ...OptionsWhoAmIFunc) (string, error)
+	WhoAmI(whoAmIOptions ...OptionsWhoAmIFunc) (models.WhoAmIResponse, error)
 	Cat(catOptions ...OptionsCatFunc) error
 }

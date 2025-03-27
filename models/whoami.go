@@ -1,8 +1,9 @@
 package models
 
-import "log/slog"
-
 type WhoAmIOptions struct {
-	Args   []string
-	Logger *slog.Logger
+	Args []string
+}
+
+type WhoAmIResponse struct {
+	Username string
 }
