@@ -9,6 +9,6 @@ Big thanks 🙏 for choosing `iza`.
 
 ## List of adopters
 
-| **Organizartion** | **Website / Contact**                                 | **Description of use**                 |
+| **Organization** | **Website / Contact**                                 | **Description of use**                 |
 |-------------------|-------------------------------------------------------|----------------------------------------|
 |            |                                       |                                        |
