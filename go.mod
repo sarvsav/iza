@@ -1,8 +1,9 @@
 module github.com/sarvsav/iza
 
 go 1.24.0
+
 require (
-	cuelang.org/go v0.12.0
+	cuelang.org/go v0.12.1
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
