@@ -3,12 +3,13 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/sarvsav/iza/models"
 	"github.com/spf13/cobra"
 )
 
-// func WithTouchArgs(args []string) internals.OptionsTouchFunc {
-// 	return func(c *models.TouchOptions) error { c.Args = args; return nil }
-// }
+func WithTouchArgs(args []string) models.OptionsTouchFunc {
+	return func(c *models.TouchOptions) error { c.Args = args; return nil }
+}
 
 // touchCmd represents the touch command
 var touchCmd = &cobra.Command{

@@ -1,8 +1,11 @@
 package models
 
-import "log/slog"
+type OptionsTouchFunc func(c *TouchOptions) error
 
 type TouchOptions struct {
-	Args   []string
-	Logger *slog.Logger
+	Args []string
+}
+
+type TouchResponse struct {
+	Name string
 }

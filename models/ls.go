@@ -1,10 +1,9 @@
 package models
 
-import "log/slog"
+type OptionsLsFunc func(c *LsOptions) error
 
 type LsOptions struct {
 	LongListing bool
 	Color       bool
 	Args        []string
-	Logger      *slog.Logger
 }

@@ -1,8 +1,7 @@
 package models
 
-import "log/slog"
+type OptionsCatFunc func(c *CatOptions) error
 
 type CatOptions struct {
-	Args   []string
-	Logger *slog.Logger
+	Args []string
 }

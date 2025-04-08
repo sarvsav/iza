@@ -3,12 +3,13 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/sarvsav/iza/models"
 	"github.com/spf13/cobra"
 )
 
-// func WithCatArgs(args []string) internals.OptionsCatFunc {
-// 	return func(c *models.CatOptions) error { c.Args = args; return nil }
-// }
+func WithCatArgs(args []string) models.OptionsCatFunc {
+	return func(c *models.CatOptions) error { c.Args = args; return nil }
+}
 
 // catCmd represents the cat command
 var catCmd = &cobra.Command{
@@ -44,7 +45,7 @@ You can provide multiple arguments to read documents from multiple collections a
 				return
 			}
 		case "datastore":
-			err := application.DataStoreService.Cat()
+			err := application.DataStoreService.Cat(WithCatArgs(args))
 			if err != nil {
 				fmt.Println(err)
 				return

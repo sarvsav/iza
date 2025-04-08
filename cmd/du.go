@@ -3,12 +3,11 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/sarvsav/iza/dbstore"
 	"github.com/sarvsav/iza/models"
 	"github.com/spf13/cobra"
 )
 
-func WithDuArgs(args []string) dbstore.OptionsDuFunc {
+func WithDuArgs(args []string) models.OptionsDuFunc {
 	return func(c *models.DuOptions) error { c.Args = args; return nil }
 }
 

@@ -3,20 +3,21 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/sarvsav/iza/models"
 	"github.com/spf13/cobra"
 )
 
-// func WithLongListing(b bool) internals.OptionsLsFunc {
-// 	return func(c *models.LsOptions) error { c.LongListing = b; return nil }
-// }
+func WithLongListing(b bool) models.OptionsLsFunc {
+	return func(c *models.LsOptions) error { c.LongListing = b; return nil }
+}
 
-// func WithColor(color bool) internals.OptionsLsFunc {
-// 	return func(c *models.LsOptions) error { c.Color = color; return nil }
-// }
+func WithColor(color bool) models.OptionsLsFunc {
+	return func(c *models.LsOptions) error { c.Color = color; return nil }
+}
 
-// func WithArgs(args []string) internals.OptionsLsFunc {
-// 	return func(c *models.LsOptions) error { c.Args = args; return nil }
-// }
+func WithArgs(args []string) models.OptionsLsFunc {
+	return func(c *models.LsOptions) error { c.Args = args; return nil }
+}
 
 // lsCmd represents the ls command
 var lsCmd = &cobra.Command{
@@ -41,15 +42,14 @@ It will list:
   3. information about demoCollection01 in demoDb,
   4. and information about demoCollection01 in demoDb and testCollection02 in testDb.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// longListingValue, err := cmd.Flags().GetBool("long")
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// colorValue, err := cmd.Flags().GetBool("color")
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// internals.Ls(WithLongListing(longListingValue), WithColor(colorValue), WithArgs(args))
+		longListingValue, err := cmd.Flags().GetBool("long")
+		if err != nil {
+			panic(err)
+		}
+		colorValue, err := cmd.Flags().GetBool("color")
+		if err != nil {
+			panic(err)
+		}
 		service, err := cmd.Flags().GetString("service")
 		if err != nil {
 			fmt.Println(err)
@@ -64,7 +64,10 @@ It will list:
 			}
 			fmt.Println(result)
 		case "datastore":
-			result, err := application.DataStoreService.Ls()
+			result, err := application.DataStoreService.Ls(
+				WithLongListing(longListingValue),
+				WithColor(colorValue),
+				WithArgs(args))
 			if err != nil {
 				fmt.Println(err)
 				return

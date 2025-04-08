@@ -1,8 +1,7 @@
 package models
 
-import "log/slog"
+type OptionsDuFunc func(c *DuOptions) error
 
 type DuOptions struct {
-	Args   []string
-	Logger *slog.Logger
+	Args []string
 }
