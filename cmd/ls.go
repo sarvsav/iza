@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/fatih/color"
 	"github.com/sarvsav/iza/models"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +19,42 @@ func WithColor(color bool) models.OptionsLsFunc {
 
 func WithArgs(args []string) models.OptionsLsFunc {
 	return func(c *models.LsOptions) error { c.Args = args; return nil }
+}
+
+// Helper function to print each entry (database or collection) in ls -l style
+func printEntry(typeChar, name, perms, owner, group string, size int64, lastModified time.Time) {
+	// Format size with units (e.g., KB, MB, GB)
+	sizeFormatted := formatSize(size)
+
+	// Format last modified date
+	dateFormatted := lastModified.Format("Jan 02 15:04")
+
+	// Define a wrapper function to match the expected signature
+	var colorFunc func(format string, args ...interface{})
+	if typeChar == "d" {
+		colorFunc = func(format string, args ...interface{}) {
+			color.New(color.FgGreen).Printf(format, args...)
+		}
+	} else {
+		colorFunc = func(format string, args ...interface{}) {
+			color.New(color.FgBlue).Printf(format, args...)
+		}
+	}
+
+	// Format output as "type owner group permissions size date name"
+	colorFunc("%s%s %s %s %s %s %s\n", typeChar, perms, owner, group, sizeFormatted, dateFormatted, name)
+}
+
+// Function to format the size (bytes to KB/MB/GB)
+func formatSize(size int64) string {
+	if size >= 1024*1024*1024 {
+		return fmt.Sprintf("%.2f GB", float64(size)/1024/1024/1024)
+	} else if size >= 1024*1024 {
+		return fmt.Sprintf("%.2f MB", float64(size)/1024/1024)
+	} else if size >= 1024 {
+		return fmt.Sprintf("%.2f KB", float64(size)/1024)
+	}
+	return fmt.Sprintf("%d bytes", size)
 }
 
 // lsCmd represents the ls command
@@ -72,7 +110,12 @@ It will list:
 				fmt.Println(err)
 				return
 			}
-			fmt.Println(result)
+			for _, db := range result.Databases {
+				printEntry("d", db.Name, db.Perms, db.Owner, db.Group, db.Size, db.LastModified)
+			}
+			for _, col := range result.Collections {
+				printEntry(".", col.Name, col.Perms, col.Owner, col.Group, col.Size, col.LastModified)
+			}
 		default:
 			fmt.Println("Service not found")
 		}

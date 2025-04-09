@@ -119,6 +119,14 @@ go install github.com/sarvsav/iza/cmd/iza@latest
 <!-- USAGE EXAMPLES -->
 ## Usage
 
+Running `ls` for mongodb and listing databases as well as collections.
+
+```sh
+iza ls -l # For long listing
+```
+
+![ls_mongo](./assets/recordings/ls_mongo_debug.gif)
+
 Running `whoami` for mongodb and log level as debug.
 
 ```sh

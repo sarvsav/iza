@@ -60,7 +60,7 @@ func main() {
 		return "00000000-0000-0000-0000-000000000000"
 	}
 
-	log = logger.NewWithEvents(os.Stdout, logger.LevelDebug, "IZA", traceIDFn, events)
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "IZA", traceIDFn, events)
 
 	// -------------------------------------------------------------------------
 	// Load environment variables

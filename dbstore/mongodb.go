@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/sarvsav/iza/database"
 	"github.com/sarvsav/iza/foundation/logger"
@@ -89,7 +90,8 @@ func (m *mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.
 	}, nil
 }
 
-func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) ([]string, error) {
+func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, error) {
+	var result models.LsResponse
 	lsCmd := &models.LsOptions{
 		LongListing: false,
 		Color:       false,
@@ -98,7 +100,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) ([]string, error) {
 
 	for _, opt := range lsOptions {
 		if err := opt(lsCmd); err != nil {
-			return nil, err
+			return models.LsResponse{}, err
 		}
 	}
 
@@ -116,7 +118,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) ([]string, error) {
 
 	if err != nil {
 		m.log.Error(context.Background(), "Failed to connect to MongoDB", "error", err)
-		return nil, err
+		return models.LsResponse{}, err
 	}
 
 	if len(lsCmd.Args) == 0 {
@@ -128,7 +130,17 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) ([]string, error) {
 		if err != nil {
 			log.Panic(err)
 		}
-		m.log.Info(context.Background(), "List of databases", "db", dbList)
+		m.log.Debug(context.Background(), "List of databases", "db", dbList)
+		var database models.Database
+		for _, dbName := range dbList {
+			database.Name = dbName
+			database.Perms = "rw-rw-rw-"       // Placeholder, as MongoDB does not provide permissions in ListDatabaseNames
+			database.Owner = "root"            // Placeholder, as MongoDB does not provide owner/group in ListDatabaseNames
+			database.Group = "root"            // Placeholder, as MongoDB does not provide owner/group in ListDatabaseNames
+			database.Size = 0                  // Placeholder, as MongoDB does not provide size in ListDatabaseNames
+			database.LastModified = time.Now() // Placeholder, as MongoDB does not provide last modified in ListDatabaseNames
+			result.Databases = append(result.Databases, database)
+		}
 	}
 
 	for _, arg := range lsCmd.Args {
@@ -144,7 +156,27 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) ([]string, error) {
 			if err != nil {
 				m.log.Error(context.Background(), "Failed to list collections", "error", err)
 			}
-			m.log.Info(context.Background(), "List of collections", "db", dbName, "collections", collections)
+			m.log.Debug(context.Background(), "List of collections", "db", dbName, "collections", collections)
+			result.Databases = []models.Database{
+				{
+					Name:         dbName,
+					Perms:        "rw-rw-rw-", // Placeholder, as MongoDB does not provide permissions in ListDatabaseNames
+					Owner:        "root",      // Placeholder, as MongoDB does not provide owner/group in ListDatabaseNames
+					Group:        "root",      // Placeholder, as MongoDB does not provide owner/group in ListDatabaseNames
+					Size:         0,           // Placeholder, as MongoDB does not provide size in ListDatabaseNames
+					LastModified: time.Now(),  // Placeholder, as MongoDB does not provide last modified in ListDatabaseNames
+				},
+			}
+			var collection models.Collection
+			for _, collectionName := range collections {
+				collection.Name = collectionName
+				collection.Perms = "rw-rw-rw-"       // Placeholder, as MongoDB does not provide permissions in ListCollectionNames
+				collection.Owner = "root"            // Placeholder, as MongoDB does not provide owner/group in ListCollectionNames
+				collection.Group = "root"            // Placeholder, as MongoDB does not provide owner/group in ListCollectionNames
+				collection.Size = 0                  // Placeholder, as MongoDB does not provide size in ListCollectionNames
+				collection.LastModified = time.Now() // Placeholder, as MongoDB does not provide last modified in ListCollectionNames
+				result.Collections = append(result.Collections, collection)
+			}
 		}
 		if len(argParts) == 2 {
 			dbName := argParts[0]
@@ -154,10 +186,42 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) ([]string, error) {
 			if err != nil {
 				m.log.Error(context.Background(), "Failed to list collection info", "error", err)
 			}
-			m.log.Info(context.Background(), "Collection info", "db", dbName, "collection", collectionName, "indexes", collectionIndexes)
+			result.Databases = []models.Database{
+				{
+					Name:         dbName,
+					Perms:        "rw-rw-rw-", // Placeholder, as MongoDB does not provide permissions in ListCollectionNames
+					Owner:        "root",      // Placeholder, as MongoDB does not provide owner/group in ListCollectionNames
+					Group:        "root",      // Placeholder, as MongoDB does not provide owner/group in ListCollectionNames
+					Size:         0,           // Placeholder, as MongoDB does not provide size in ListCollectionNames
+					LastModified: time.Now(),  // Placeholder, as MongoDB does not provide last modified in ListCollectionNames
+				},
+			}
+			result.Collections = []models.Collection{
+				{
+					Name:         collectionName,
+					Perms:        "rw-rw-rw-", // Placeholder, as MongoDB does not provide permissions in ListCollectionNames
+					Owner:        "root",      // Placeholder, as MongoDB does not provide owner/group in ListCollectionNames
+					Group:        "root",      // Placeholder, as MongoDB does not provide owner/group in ListCollectionNames
+					Size:         0,           // Placeholder, as MongoDB does not provide size in ListCollectionNames
+					LastModified: time.Now(),  // Placeholder, as MongoDB does not provide last modified in ListCollectionNames
+				},
+			}
+			var indexes []bson.M
+			if err := collectionIndexes.All(context.TODO(), &indexes); err != nil {
+				m.log.Error(context.Background(), "Failed to decode collection indexes", "error", err)
+			}
+			for _, index := range indexes {
+				indexName, ok := index["name"].(string)
+				if !ok {
+					m.log.Error(context.Background(), "Index name is not a string", "index", index)
+					continue
+				}
+				result.Indexes = append(result.Indexes, models.Index{Name: indexName})
+			}
+			m.log.Debug(context.Background(), "List of indexes", "db", dbName, "collection", collectionName, "indexes", result.Indexes)
 		}
 	}
-	return nil, nil
+	return result, nil
 }
 
 // Du is equivalent to the du command in Unix-like systems.
