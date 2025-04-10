@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sarvsav/iza/database"
 	"github.com/sarvsav/iza/foundation/logger"
 	"github.com/sarvsav/iza/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -108,21 +107,9 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 		"color", lsCmd.Color,
 		"args", lsCmd.Args)
 
-	client, err := database.GetMongoClient()
-	defer func() {
-		if err := database.DisconnectMongoClient(client); err != nil {
-			m.log.Error(context.Background(), "Failed to disconnect from MongoDB", "error", err)
-		}
-	}()
-
-	if err != nil {
-		m.log.Error(context.Background(), "Failed to connect to MongoDB", "error", err)
-		return models.LsResponse{}, err
-	}
-
 	if len(lsCmd.Args) == 0 {
 		// Use a filter to only select non-empty databases.
-		dbList, err := client.ListDatabaseNames(
+		dbList, err := m.mc.ListDatabaseNames(
 			context.TODO(),
 			bson.D{},
 		)
@@ -150,7 +137,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 		}
 		if len(argParts) == 1 {
 			dbName := argParts[0]
-			database := client.Database(dbName)
+			database := m.mc.Database(dbName)
 			collections, err := database.ListCollectionNames(context.TODO(), bson.D{})
 			if err != nil {
 				m.log.Error(context.Background(), "Failed to list collections", "error", err)
@@ -180,7 +167,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 		if len(argParts) == 2 {
 			dbName := argParts[0]
 			collectionName := argParts[1]
-			collection := client.Database(dbName).Collection(collectionName)
+			collection := m.mc.Database(dbName).Collection(collectionName)
 			collectionIndexes, err := collection.Indexes().List(context.TODO())
 			if err != nil {
 				m.log.Error(context.Background(), "Failed to list collection info", "error", err)
@@ -242,18 +229,6 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, e
 
 	m.log.Debug(context.Background(), "provided command with options", "args", duCmd.Args)
 
-	client, err := database.GetMongoClient()
-	defer func() {
-		if err := database.DisconnectMongoClient(client); err != nil {
-			m.log.Error(context.Background(), "Failed to disconnect from MongoDB", "error", err)
-		}
-	}()
-
-	if err != nil {
-		m.log.Error(context.Background(), "Failed to connect to MongoDB", "error", err)
-		return models.DuResponse{}, err
-	}
-
 	// Find db and collection name
 	for _, arg := range duCmd.Args {
 		// Extract db and collection names from the argument
@@ -273,7 +248,7 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, e
 		}
 		if collectionName != "" {
 			stats := bson.M{}
-			err := client.Database(dbName).RunCommand(context.TODO(), bson.D{{Key: "collStats", Value: collectionName}}).Decode(&stats)
+			err := m.mc.Database(dbName).RunCommand(context.TODO(), bson.D{{Key: "collStats", Value: collectionName}}).Decode(&stats)
 			if err != nil {
 				m.log.Error(context.Background(), "Failed to get collection stats", collectionName, err)
 			}
@@ -285,7 +260,7 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, e
 			}
 		} else {
 			stats := bson.M{}
-			err := client.Database(dbName).RunCommand(context.TODO(), bson.D{{Key: "dbStats", Value: 1}}).Decode(&stats)
+			err := m.mc.Database(dbName).RunCommand(context.TODO(), bson.D{{Key: "dbStats", Value: 1}}).Decode(&stats)
 			if err != nil {
 				m.log.Error(context.Background(), "Failed to get database stats", dbName, err)
 			}
@@ -322,18 +297,6 @@ func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.Touc
 		return models.TouchResponse{}, errors.New("expected format: iza touch database/collection")
 	}
 
-	client, err := database.GetMongoClient()
-	defer func() {
-		if err := database.DisconnectMongoClient(client); err != nil {
-			m.log.Error(context.Background(), "Failed to disconnect from MongoDB", "error", err)
-		}
-	}()
-
-	if err != nil {
-		m.log.Error(context.Background(), "Failed to connect to MongoDB", "error", err)
-		return models.TouchResponse{}, err
-	}
-
 	// Iterate the arguments and create a collection for each
 	for _, arg := range touchCmd.Args {
 		// Extract db and collection names from the argument
@@ -352,7 +315,7 @@ func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.Touc
 			collectionName = argParts[1]
 		}
 
-		if err := client.Database(dbName).CreateCollection(context.TODO(), collectionName); err != nil {
+		if err := m.mc.Database(dbName).CreateCollection(context.TODO(), collectionName); err != nil {
 			m.log.Error(context.Background(), "Failed to create collection", "error", err)
 		}
 		m.log.Info(context.Background(), "Successfully created empty collection", "dbName", dbName, "collection", collectionName)
@@ -382,19 +345,6 @@ func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) (models.CatRespons
 
 	m.log.Debug(context.Background(), "provided command with options", "args", catCmd.Args)
 
-	// Create a new client and connect to the server
-	client, err := database.GetMongoClient()
-	defer func() {
-		if err := database.DisconnectMongoClient(client); err != nil {
-			m.log.Error(context.Background(), "Failed to disconnect from MongoDB", "error", err)
-		}
-	}()
-
-	if err != nil {
-		m.log.Error(context.Background(), "Failed to connect to MongoDB", "error", err)
-		return models.CatResponse{}, err
-	}
-
 	// Iterate the arguments and create a collection for each
 	for _, arg := range catCmd.Args {
 		// Extract db and collection names from the argument
@@ -413,7 +363,7 @@ func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) (models.CatRespons
 			collectionName = argParts[1]
 		}
 
-		coll := client.Database(dbName).Collection(collectionName)
+		coll := m.mc.Database(dbName).Collection(collectionName)
 		opts := options.Count().SetHint("_id_")
 		count, err := coll.CountDocuments(context.TODO(), bson.D{}, opts)
 		if err != nil {
