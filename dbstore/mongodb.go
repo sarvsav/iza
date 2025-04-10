@@ -280,6 +280,7 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, e
 func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.TouchResponse, error) {
 
 	var dbName, collectionName string
+	var result models.TouchResponse
 
 	touchCmd := &models.TouchOptions{
 		Args: []string{},
@@ -318,12 +319,11 @@ func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.Touc
 		if err := m.mc.Database(dbName).CreateCollection(context.TODO(), collectionName); err != nil {
 			m.log.Error(context.Background(), "Failed to create collection", "error", err)
 		}
-		m.log.Info(context.Background(), "Successfully created empty collection", "dbName", dbName, "collection", collectionName)
+		m.log.Debug(context.Background(), "Successfully created empty collection", "dbName", dbName, "collection", collectionName)
+		result.Name = append(result.Name, dbName+"/"+collectionName)
 	}
 
-	return models.TouchResponse{
-		Name: collectionName,
-	}, nil
+	return result, nil
 }
 
 // Cat is equivalent to the cat command in Unix-like systems.

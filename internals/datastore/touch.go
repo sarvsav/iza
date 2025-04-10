@@ -6,11 +6,11 @@ import (
 
 // Touch is a function that creates a new collection in the database
 // and returns the name of the collection created.
-func (ds *DataStoreService) Touch(touchOptions ...models.OptionsTouchFunc) (string, error) {
-	collectionCreated, err := ds.dataStore.Touch(touchOptions...)
+func (ds *DataStoreService) Touch(touchOptions ...models.OptionsTouchFunc) (models.TouchResponse, error) {
+	result, err := ds.dataStore.Touch(touchOptions...)
 	if err != nil {
-		return "", err
+		return models.TouchResponse{}, err
 	}
 
-	return collectionCreated.Name, nil
+	return result, nil
 }

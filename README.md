@@ -119,6 +119,14 @@ go install github.com/sarvsav/iza/cmd/iza@latest
 <!-- USAGE EXAMPLES -->
 ## Usage
 
+Running `touch` for mongodb to create empty collections.
+
+```sh
+iza touch hello/buna_ziua
+```
+
+![touch_mongo](./assets/recordings/touch_mongo_debug.gif)
+
 Running `ls` for mongodb and listing databases as well as collections.
 
 ```sh

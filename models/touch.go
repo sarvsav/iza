@@ -7,5 +7,5 @@ type TouchOptions struct {
 }
 
 type TouchResponse struct {
-	Name string
+	Name []string
 }

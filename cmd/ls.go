@@ -9,15 +9,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func WithLongListing(b bool) models.OptionsLsFunc {
+func WithLsLongListing(b bool) models.OptionsLsFunc {
 	return func(c *models.LsOptions) error { c.LongListing = b; return nil }
 }
 
-func WithColor(color bool) models.OptionsLsFunc {
+func WithLsColor(color bool) models.OptionsLsFunc {
 	return func(c *models.LsOptions) error { c.Color = color; return nil }
 }
 
-func WithArgs(args []string) models.OptionsLsFunc {
+func WithLsArgs(args []string) models.OptionsLsFunc {
 	return func(c *models.LsOptions) error { c.Args = args; return nil }
 }
 
@@ -103,9 +103,9 @@ It will list:
 			fmt.Println(result)
 		case "datastore":
 			result, err := application.DataStoreService.Ls(
-				WithLongListing(longListingValue),
-				WithColor(colorValue),
-				WithArgs(args))
+				WithLsLongListing(longListingValue),
+				WithLsColor(colorValue),
+				WithLsArgs(args))
 			if err != nil {
 				fmt.Println(err)
 				return

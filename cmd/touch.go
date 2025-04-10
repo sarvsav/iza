@@ -11,6 +11,16 @@ func WithTouchArgs(args []string) models.OptionsTouchFunc {
 	return func(c *models.TouchOptions) error { c.Args = args; return nil }
 }
 
+func prettyPrintTouch(results models.TouchResponse) {
+	if len(results.Name) == 0 {
+		fmt.Println("No collections created.")
+		return
+	}
+	for _, name := range results.Name {
+		fmt.Println(name)
+	}
+}
+
 // touchCmd represents the touch command
 var touchCmd = &cobra.Command{
 	Use:   "touch",
@@ -44,12 +54,12 @@ It will create three collections:
 			}
 			fmt.Println(result)
 		case "datastore":
-			result, err := application.DataStoreService.Touch()
+			result, err := application.DataStoreService.Touch(WithTouchArgs(args))
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-			fmt.Println(result)
+			prettyPrintTouch(result)
 		default:
 			fmt.Println("Service not found")
 		}
