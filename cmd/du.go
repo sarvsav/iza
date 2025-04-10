@@ -11,6 +11,14 @@ func WithDuArgs(args []string) models.OptionsDuFunc {
 	return func(c *models.DuOptions) error { c.Args = args; return nil }
 }
 
+func prettyPrint(result models.DuResponse) {
+	if result.Collection == "" {
+		fmt.Println(result.Size, result.Database)
+	} else {
+		fmt.Println(result.Size, result.Database+"/"+result.Collection)
+	}
+}
+
 // duCmd represents the du command
 var duCmd = &cobra.Command{
 	Use:   "du",
@@ -34,11 +42,12 @@ Prints the disk usage of the specified database or collection.
 			}
 			fmt.Println(result)
 		case "datastore":
-			err := application.DataStoreService.Du(WithDuArgs(args))
+			result, err := application.DataStoreService.Du(WithDuArgs(args))
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
+			prettyPrint(result)
 		default:
 			fmt.Println("Service not found")
 		}

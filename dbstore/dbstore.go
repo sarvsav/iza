@@ -5,7 +5,7 @@ import (
 )
 
 type Client interface {
-	Du(duOptions ...models.OptionsDuFunc) error
+	Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, error)
 	Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, error)
 	Touch(touchOptions ...models.OptionsTouchFunc) (models.TouchResponse, error)
 	WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.WhoAmIResponse, error)

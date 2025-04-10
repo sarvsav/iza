@@ -2,11 +2,11 @@ package datastore
 
 import "github.com/sarvsav/iza/models"
 
-// WhoAmI returns the username of the current user from the datastore.
-func (ds *DataStoreService) Du(duOptions ...models.OptionsDuFunc) error {
-	err := ds.dataStore.Du(duOptions...)
+// Du returns the disk usage of the specified database or collection.
+func (ds *DataStoreService) Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, error) {
+	result, err := ds.dataStore.Du(duOptions...)
 	if err != nil {
-		return err
+		return models.DuResponse{}, err
 	}
-	return nil
+	return result, nil
 }

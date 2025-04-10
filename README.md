@@ -135,6 +135,14 @@ iza cat demo/buna_ziua
 
 ![cat_mongo](./assets/recordings/cat_mongo_debug.gif)
 
+Running `du` for mongodb and printing size for the collections.
+
+```sh
+iza du sample_mflix
+```
+
+![du_mongo](./assets/recordings/du_mongo_debug.gif)
+
 Running `whoami` for mongodb and log level as debug.
 
 ```sh

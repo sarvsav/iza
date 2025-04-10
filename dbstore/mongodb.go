@@ -225,7 +225,8 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 
 // Du is equivalent to the du command in Unix-like systems.
 // It is used to calculate the disk usage of database or collection.
-func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) error {
+func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, error) {
+	var result models.DuResponse
 
 	var dbName, collectionName string
 
@@ -235,7 +236,7 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) error {
 
 	for _, opt := range duOptions {
 		if err := opt(duCmd); err != nil {
-			return err
+			return models.DuResponse{}, err
 		}
 	}
 
@@ -250,7 +251,7 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) error {
 
 	if err != nil {
 		m.log.Error(context.Background(), "Failed to connect to MongoDB", "error", err)
-		return err
+		return models.DuResponse{}, err
 	}
 
 	// Find db and collection name
@@ -276,17 +277,27 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) error {
 			if err != nil {
 				m.log.Error(context.Background(), "Failed to get collection stats", collectionName, err)
 			}
-			m.log.Info(context.Background(), "Collection size in bytes", collectionName, stats["size"])
+			m.log.Debug(context.Background(), "Collection size in bytes", collectionName, stats["size"])
+			result = models.DuResponse{
+				Database:   dbName,
+				Collection: collectionName,
+				Size:       int64(stats["size"].(int32)),
+			}
 		} else {
 			stats := bson.M{}
 			err := client.Database(dbName).RunCommand(context.TODO(), bson.D{{Key: "dbStats", Value: 1}}).Decode(&stats)
 			if err != nil {
 				m.log.Error(context.Background(), "Failed to get database stats", dbName, err)
 			}
-			m.log.Info(context.Background(), "Database size: in bytes", dbName, stats["dataSize"])
+			m.log.Debug(context.Background(), "Database size: in bytes", dbName, stats["dataSize"])
+			result = models.DuResponse{
+				Database:   dbName,
+				Collection: "",
+				Size:       stats["dataSize"].(int64),
+			}
 		}
 	}
-	return nil
+	return result, nil
 }
 
 // Touch is equivalent to the touch command in Unix-like systems.
