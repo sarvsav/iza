@@ -25,20 +25,30 @@ export default defineConfig({
 				{
 					label: 'Getting started',
 					items: [
-						{ label: 'Installation', slug: 'getting-started/installation' },
-						{ label: 'Configuration', slug: 'getting-started/configuration' },
+						{ label: 'Installation', slug: 'iza/getting-started/installation' },
+						{ label: 'Configuration', slug: 'iza/getting-started/configuration' },
 					],
 				},
 				{
 					label: 'Knowledge Base',
 					items: [
-						{ label: 'Commands', slug: 'knowledge-base/commands' },
-						{ label: 'Variables', slug: 'knowledge-base/variables' },
+						{ label: 'Commands', slug: 'iza/knowledge-base/commands' },
+						{ label: 'Variables', slug: 'iza/knowledge-base/variables' },
+					],
+				},
+				{
+					label: 'Commands',
+					items: [
+						{ label: 'cat', slug: 'iza/commands/cat' },
+						{ label: 'du', slug: 'iza/commands/du' },
+						{ label: 'ls', slug: 'iza/commands/ls' },
+						{ label: 'touch', slug: 'iza/commands/touch' },
+						{ label: 'whoami', slug: 'iza/commands/whoami' },
 					],
 				},
 				{
 					label: 'Contributing',
-					autogenerate: { directory: 'contribute'},
+					autogenerate: { directory: 'iza/contribute'},
 				},
 			],
 			logo: {
