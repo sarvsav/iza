@@ -127,6 +127,14 @@ iza ls -l # For long listing
 
 ![ls_mongo](./assets/recordings/ls_mongo_debug.gif)
 
+Running `cat` for mongodb and printing documents for the collections.
+
+```sh
+iza cat demo/buna_ziua
+```
+
+![cat_mongo](./assets/recordings/cat_mongo_debug.gif)
+
 Running `whoami` for mongodb and log level as debug.
 
 ```sh
