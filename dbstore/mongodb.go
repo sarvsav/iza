@@ -3,7 +3,6 @@ package dbstore
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -355,8 +354,9 @@ func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.Touc
 
 // Cat is equivalent to the cat command in Unix-like systems.
 // It is used to display the contents of a document in the collection.
-func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) error {
+func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) (models.CatResponse, error) {
 
+	var result models.CatResponse
 	catCmd := &models.CatOptions{
 		Args: []string{},
 	}
@@ -365,7 +365,7 @@ func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) error {
 
 	for _, opt := range catOptions {
 		if err := opt(catCmd); err != nil {
-			return err
+			return models.CatResponse{}, err
 		}
 	}
 
@@ -381,7 +381,7 @@ func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) error {
 
 	if err != nil {
 		m.log.Error(context.Background(), "Failed to connect to MongoDB", "error", err)
-		return err
+		return models.CatResponse{}, err
 	}
 
 	// Iterate the arguments and create a collection for each
@@ -408,8 +408,8 @@ func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) error {
 		if err != nil {
 			m.log.Error(context.Background(), "Failed to count documents", "error", err)
 		}
-		m.log.Info(context.Background(), "Total documents in collection", "dbName", dbName, "collection", collectionName, "count", count)
-
+		m.log.Debug(context.Background(), "Total documents in collection", "dbName", dbName, "collection", collectionName, "count", count)
+		result.Count = count
 		var results []bson.M
 
 		filter := bson.D{{}}
@@ -423,8 +423,8 @@ func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) error {
 		if err := cursor.All(context.TODO(), &results); err != nil {
 			log.Panic(err)
 		}
-		fmt.Println(results)
+		result.Documents = results
 	}
 
-	return nil
+	return result, nil
 }

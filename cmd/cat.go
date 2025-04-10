@@ -3,12 +3,27 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/fatih/color"
 	"github.com/sarvsav/iza/models"
 	"github.com/spf13/cobra"
 )
 
 func WithCatArgs(args []string) models.OptionsCatFunc {
 	return func(c *models.CatOptions) error { c.Args = args; return nil }
+}
+
+func printPrettyJSON(results models.CatResponse) {
+	green := color.New(color.FgGreen).SprintFunc()
+	cyan := color.New(color.FgCyan).SprintFunc()
+
+	fmt.Println(green("Total number of Documents:"), results.Count)
+	for i, doc := range results.Documents {
+		fmt.Println(green("Document:"), i+1)
+		for k, v := range doc {
+			fmt.Printf("  %s: %v\n", cyan(k), v)
+		}
+		fmt.Println()
+	}
 }
 
 // catCmd represents the cat command
@@ -45,11 +60,12 @@ You can provide multiple arguments to read documents from multiple collections a
 				return
 			}
 		case "datastore":
-			err := application.DataStoreService.Cat(WithCatArgs(args))
+			result, err := application.DataStoreService.Cat(WithCatArgs(args))
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
+			printPrettyJSON(result)
 		default:
 			fmt.Println("Service not found")
 		}

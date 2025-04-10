@@ -9,5 +9,5 @@ type Client interface {
 	Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, error)
 	Touch(touchOptions ...models.OptionsTouchFunc) (models.TouchResponse, error)
 	WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.WhoAmIResponse, error)
-	Cat(catOptions ...models.OptionsCatFunc) error
+	Cat(catOptions ...models.OptionsCatFunc) (models.CatResponse, error)
 }
