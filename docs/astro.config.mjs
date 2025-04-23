@@ -9,7 +9,7 @@ export default defineConfig({
 			title: 'Iza Docs',
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/sarvsav/iza'},
-				// { twitter: 'https://twitter.com/sarvsav' },
+				{ icon: 'twitter', label: 'Twitter', href: 'https://twitter.com/sarvsav' },
 				// codeberg: 'https://codeberg.org/knut/examples',
 				// discord: 'https://astro.build/chat',
 				// gitlab: 'https://gitlab.com/delucis',
