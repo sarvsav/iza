@@ -7,9 +7,9 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'Iza Docs',
-			social: {
-				github: 'https://github.com/sarvsav/iza',
-				twitter: 'https://twitter.com/sarvsav',
+			social: [
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/sarvsav/iza'},
+				// { twitter: 'https://twitter.com/sarvsav' },
 				// codeberg: 'https://codeberg.org/knut/examples',
 				// discord: 'https://astro.build/chat',
 				// gitlab: 'https://gitlab.com/delucis',
@@ -19,7 +19,7 @@ export default defineConfig({
 				// twitch: 'https://www.twitch.tv/bholmesdev',
 				// 'x.com': 'https://x.com/astrodotbuild',
 				// youtube: 'https://youtube.com/@astrodotbuild',
-			},
+				],
 			description: 'Iza is a tool to do operations on your databases, cicd, artfactory with linux commands',
 			sidebar: [
 				{
