@@ -1,1 +1,9 @@
-go.tool.sum
+{
+  "description": "Ignore go.tool.sum file",
+  "rules": [
+    {
+      "description": "Ignore go.tool.sum",
+      "path": "go\\.tool\\.sum"
+    }
+  ]
+}
