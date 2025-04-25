@@ -1,9 +1,9 @@
-{
-  "description": "Ignore go.tool.sum file",
-  "rules": [
-    {
-      "description": "Ignore go.tool.sum",
-      "path": "go\\.tool\\.sum"
-    }
-  ]
-}
+f3264b2a965ef6df8dbb6c550a8b4a2c449010f7:go.tool.sum:generic-api-key:6
+f3264b2a965ef6df8dbb6c550a8b4a2c449010f7:go.tool.sum:generic-api-key:8
+f3264b2a965ef6df8dbb6c550a8b4a2c449010f7:go.tool.sum:generic-api-key:38
+f3264b2a965ef6df8dbb6c550a8b4a2c449010f7:go.tool.sum:generic-api-key:53
+f3264b2a965ef6df8dbb6c550a8b4a2c449010f7:go.tool.sum:generic-api-key:115
+f3264b2a965ef6df8dbb6c550a8b4a2c449010f7:go.tool.sum:generic-api-key:230
+f3264b2a965ef6df8dbb6c550a8b4a2c449010f7:go.tool.sum:generic-api-key:244
+f3264b2a965ef6df8dbb6c550a8b4a2c449010f7:go.tool.sum:generic-api-key:742
+f3264b2a965ef6df8dbb6c550a8b4a2c449010f7:go.tool.sum:generic-api-key:825
