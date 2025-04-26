@@ -25,6 +25,8 @@ import (
 	"context"
 	"os"
 
+	_ "embed"
+
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
@@ -41,6 +43,12 @@ import (
 
 // for cue configuration
 var requiredKeys = []string{"database", "artifactory", "ci-tools"}
+
+//go:embed cue/dev/schema.cue
+var DevSchema string
+
+//go:embed cue/prod/schema.cue
+var ProdSchema string
 
 func main() {
 
@@ -154,6 +162,11 @@ func main() {
 			log.Error(context.Background(), "Failed to disconnect from MongoDB", "error", err)
 		}
 	}()
+
+	if err != nil {
+		log.Error(context.Background(), "Failed to connect to MongoDB", "error", err)
+		return
+	}
 
 	// -------------------------------------------------------------------------
 	// Setup application
