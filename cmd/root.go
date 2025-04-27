@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -13,6 +14,13 @@ import (
 var cfgFile string
 
 var application *app.Application
+
+func checkCueConfig() error {
+	if _, err := os.Stat("dev/config.cue"); os.IsNotExist(err) {
+		return errors.New("❌ config.cue file not found. Please run `iza init` to create it")
+	}
+	return nil
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -35,6 +43,13 @@ You can also use iza to interact with MongoDB in a more advanced way, such as:
   iza insert
 
 And, detailed information about each command can be found in the help menu.`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Skip config check for some special commands like "init"
+		if cmd.Name() == "init" {
+			return nil
+		}
+		return checkCueConfig()
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		// Check for version flag, print version information and exit
 		if cmd.Flag("version").Changed {

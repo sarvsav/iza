@@ -22,8 +22,7 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/sarvsav/iza/internals/app"
 	"github.com/spf13/cobra"
 )
 
@@ -43,10 +42,7 @@ To run in ci systems, you can provide the values as command line arguments.
 ? Enable notifications? (y/n) [y]:
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init called")
-		fmt.Println("Check for the connection")
-		fmt.Println("Check for overriding the default values")
-		fmt.Println("No configuration found. Run `iza init` to create the configuration file.")
+		app.Init()
 	},
 }
 
