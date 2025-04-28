@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -12,6 +13,13 @@ import (
 	"golang.org/x/text/language"
 )
 
+var badgeStyle = lipgloss.NewStyle().
+	Padding(0, 1).
+	MarginRight(1).
+	Background(lipgloss.Color("#5E81AC")). // Nordic blue
+	Foreground(lipgloss.Color("#ECEFF4")). // Light text
+	Bold(true)
+
 // Model struct to store the application state
 type Model struct {
 	Stage       int
@@ -19,6 +27,7 @@ type Model struct {
 	ServiceType string
 	Inputs      []textinput.Model
 	FocusIndex  int
+	ErrorMsg    string
 }
 
 // item struct for list items (service options)
@@ -35,6 +44,7 @@ func (i item) FilterValue() string { return i.title }
 var (
 	greenStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("10")) // Green
 	boldStyle    = lipgloss.NewStyle().Bold(true)
+	errorStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true) // Red
 	selectedIcon = map[string]string{
 		"Mongodb": "🍃",
 		"Jenkins": "🛠️",
@@ -82,6 +92,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			if m.Stage == 1 {
+				// Validate current input before moving forward
+				if strings.TrimSpace(m.Inputs[m.FocusIndex].Value()) == "" {
+					m.ErrorMsg = "Please fill out the field before proceeding."
+					return m, nil
+				}
+				m.ErrorMsg = "" // clear error if okay
 				if m.FocusIndex == len(m.Inputs)-1 {
 					m.Stage++
 					return m, nil
@@ -108,7 +124,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	// Update for inputs when stage 1 is active
+	// If typing in inputs
 	if m.Stage == 1 {
 		cmds := make([]tea.Cmd, len(m.Inputs))
 		for i := range m.Inputs {
@@ -205,9 +221,11 @@ func (m Model) View() string {
 	if m.Stage == 1 {
 		c := cases.Title(language.English)
 		serviceName := c.String(m.ServiceType)
-		icon := selectedIcon[serviceName]
 
-		s += boldStyle.Render(fmt.Sprintf("%s Configure %s\n\n", icon, serviceName))
+		icon := selectedIcon[serviceName]
+		badge := badgeStyle.Render(fmt.Sprintf("[%s %s]", icon, serviceName))
+		s += boldStyle.Render(fmt.Sprintf("%s  Configure", badge))
+		s += "\n\n"
 
 		labels := map[string][]string{
 			"mongodb": {"MongoDB URL", "Username", "Password"},
@@ -217,32 +235,28 @@ func (m Model) View() string {
 
 		currentLabels := labels[m.ServiceType]
 
-		// Add padding or no spaces before the first label
 		for i, input := range m.Inputs {
 			var prefix string
 			if i == m.FocusIndex {
-				// Show "➤" for the focused input
 				prefix = greenStyle.Render("➤")
 			} else {
-				// For non-focused fields, keep an empty space or a short prefix
 				prefix = "  "
 			}
 
-			// Align labels properly using fmt.Sprintf
-			label := fmt.Sprintf("%s %s:", prefix, greenStyle.Render(currentLabels[i]))
-
-			// Ensure proper alignment between the label and input field
-			s += fmt.Sprintf("%-40s\n", label) // Align labels and inputs
+			s += fmt.Sprintf("%s %s:\n", prefix, greenStyle.Render(currentLabels[i]))
 			s += input.View() + "\n\n"
 		}
 
-		// Add instructions to move to the next step
+		if m.ErrorMsg != "" {
+			s += "\n" + errorStyle.Render("❗ "+m.ErrorMsg) + "\n"
+		}
+
 		s += "\n[Press Enter to move next]\n"
 		return s
 	}
 
 	if m.Stage == 2 {
-		s += boldStyle.Render("🔒 Review your information:\n\n")
+		s += fmt.Sprintf("🔒 Review your information:\n\n")
 
 		labels := map[string][]string{
 			"mongodb": {"MongoDB URL", "Username", "Password"},
@@ -252,15 +266,13 @@ func (m Model) View() string {
 
 		currentLabels := labels[m.ServiceType]
 
-		// Find the maximum label length
 		maxLen := 0
 		for _, label := range currentLabels {
 			if len(label) > maxLen {
 				maxLen = len(label)
 			}
 		}
-
-		maxLen += 2 // Extra padding after ➤
+		maxLen += 2
 
 		for i, input := range m.Inputs {
 			label := fmt.Sprintf("➤ %s", currentLabels[i])
@@ -275,4 +287,68 @@ func (m Model) View() string {
 	}
 
 	return s
+}
+
+func (m Model) SaveConfigToCueFile() error {
+	var sb strings.Builder
+
+	// Start writing cue structure
+	sb.WriteString("package dev\n\n")
+	sb.WriteString("config: {\n")
+
+	switch m.ServiceType {
+	case "mongodb":
+		sb.WriteString("  database: {\n")
+		sb.WriteString("    mongo01: {\n")
+		sb.WriteString("      kind: \"database\",\n")
+		sb.WriteString("      type: \"mongodb\",\n")
+		sb.WriteString(fmt.Sprintf("      host: \"%s\",\n", m.Inputs[0].Value()))
+		sb.WriteString("      port: 27017,\n") // You could later make port dynamic too
+		sb.WriteString("      credentials: {\n")
+		sb.WriteString(fmt.Sprintf("        user: \"%s\",\n", m.Inputs[1].Value()))
+		sb.WriteString(fmt.Sprintf("        pass: \"%s\",\n", m.Inputs[2].Value()))
+		sb.WriteString("      },\n")
+		sb.WriteString("    },\n")
+		sb.WriteString("  },\n")
+
+	case "jenkins":
+		sb.WriteString("  ci_tools: {\n")
+		sb.WriteString("    jenkins01: {\n")
+		sb.WriteString("      kind: \"ci-tools\",\n")
+		sb.WriteString("      tool: \"Jenkins\",\n")
+		sb.WriteString(fmt.Sprintf("      endpoint: \"%s\",\n", m.Inputs[0].Value()))
+		sb.WriteString("      auth: {\n")
+		sb.WriteString(fmt.Sprintf("        method: \"%s\",\n", "token"))
+		sb.WriteString(fmt.Sprintf("        user: \"%s\",\n", m.Inputs[2].Value()))
+		sb.WriteString(fmt.Sprintf("        token: \"%s\",\n", m.Inputs[3].Value()))
+		sb.WriteString("      },\n")
+		sb.WriteString("    },\n")
+		sb.WriteString("  },\n")
+
+	case "jfrog":
+		sb.WriteString("  artifactory: {\n")
+		sb.WriteString("    artifactory01: {\n")
+		sb.WriteString("      kind: \"artifactory\",\n")
+		sb.WriteString(fmt.Sprintf("      url: \"%s\",\n", m.Inputs[0].Value()))
+		sb.WriteString(fmt.Sprintf("      repo: \"%s\",\n", m.Inputs[1].Value()))
+		sb.WriteString("      auth: {\n")
+		sb.WriteString(fmt.Sprintf("        user: \"%s\",\n", m.Inputs[2].Value()))
+		sb.WriteString(fmt.Sprintf("        pass: \"%s\",\n", m.Inputs[3].Value()))
+		sb.WriteString("      },\n")
+		sb.WriteString("    },\n")
+		sb.WriteString("  },\n")
+	}
+
+	sb.WriteString("}\n")
+
+	// Create folder if not exist
+	if _, err := os.Stat("dev"); os.IsNotExist(err) {
+		err := os.Mkdir("dev", 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Write to dev/config.cue
+	return os.WriteFile("dev/config.cue", []byte(sb.String()), 0644)
 }
