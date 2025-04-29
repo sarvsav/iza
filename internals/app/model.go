@@ -81,6 +81,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "q":
+			if m.Stage == 2 || m.Stage == 3 {
+				return m, tea.Quit
+			}
 		case "ctrl+c", "esc":
 			return m, tea.Quit
 		case "enter":
@@ -113,7 +117,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			if m.Stage == 2 {
-				return m, tea.Quit
+				switch msg.String() {
+				case "enter":
+					// Save and go to success stage
+					if err := m.SaveConfigToCueFile(); err != nil {
+						m.ErrorMsg = "❌ Failed to save: " + err.Error()
+						return m, nil
+					}
+					m.Stage = 3
+					return m, nil
+				case "q":
+					// Exit without saving
+					return m, tea.Quit
+				}
+			}
+			if m.Stage == 3 {
+				if msg.String() == "enter" || msg.String() == "q" {
+					return m, tea.Quit
+				}
 			}
 		case "up", "down":
 			if m.Stage == 0 {
@@ -282,8 +303,23 @@ func (m Model) View() string {
 			s += fmt.Sprintf("%s %s\n", greenStyle.Render(paddedLabel), value)
 		}
 
-		s += "\n[Press Enter to confirm and save]\n"
+		s += "\n[Press Enter to confirm and save, or q to quit without saving]\n"
 		return s
+	}
+
+	if m.Stage == 3 {
+		msg := "✅ Details saved successfully!\n\n👉 You can now run:\n\n" +
+			boldStyle.Render("myapp ls") + "\n\n" +
+			"Press " + boldStyle.Render("q") + " or " + boldStyle.Render("Enter") + " to exit."
+
+		successBox := lipgloss.NewStyle().
+			Padding(1, 2).
+			Margin(1, 0).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("10")).
+			Render(msg)
+
+		return successBox
 	}
 
 	return s
