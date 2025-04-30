@@ -29,7 +29,7 @@ func NewMongoClient(mc *mongo.Client, log *logger.Logger) *mongoClient {
 
 // WhoAmI is equivalent to the whoami command.
 // It prints the current logged in user.
-func (m *mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.WhoAmIResponse, error) {
+func (m *mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.MongoDBWhoAmIResponse, error) {
 
 	var username string
 
@@ -39,7 +39,7 @@ func (m *mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.
 
 	for _, opt := range whoAmIOptions {
 		if err := opt(whoAmICmd); err != nil {
-			return models.WhoAmIResponse{}, err
+			return models.MongoDBWhoAmIResponse{}, err
 		}
 	}
 
@@ -48,20 +48,20 @@ func (m *mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.
 	info := bson.M{}
 	if err := m.mc.Database("admin").RunCommand(context.TODO(), bson.D{{Key: "connectionStatus", Value: 1}}).Decode(&info); err != nil {
 		m.log.Error(context.Background(), "Failed to get connection status", "error", err)
-		return models.WhoAmIResponse{}, err
+		return models.MongoDBWhoAmIResponse{}, err
 	}
 
 	// Accessing "authenticatedUsers"
 	authInfo, ok := info["authInfo"].(bson.M)
 	if !ok {
 		m.log.Error(context.Background(), "authInfo is not of type bson.M")
-		return models.WhoAmIResponse{}, errors.New("authInfo is not of type bson.M")
+		return models.MongoDBWhoAmIResponse{}, errors.New("authInfo is not of type bson.M")
 	}
 
 	authenticatedUsers, ok := authInfo["authenticatedUsers"].(primitive.A)
 	if !ok {
 		m.log.Error(context.Background(), "authenticatedUsers is not of type []interface{}", "authenticatedUsers", authInfo["authenticatedUsers"])
-		return models.WhoAmIResponse{}, errors.New("authenticatedUsers is not of type []interface{}")
+		return models.MongoDBWhoAmIResponse{}, errors.New("authenticatedUsers is not of type []interface{}")
 	}
 
 	// Accessing user details
@@ -69,7 +69,7 @@ func (m *mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.
 		user, ok := authenticatedUsers[0].(bson.M)
 		if !ok {
 			m.log.Error(context.Background(), "first element in authenticatedUsers is not of type bson.M")
-			return models.WhoAmIResponse{}, errors.New("first element in authenticatedUsers is not of type bson.M")
+			return models.MongoDBWhoAmIResponse{}, errors.New("first element in authenticatedUsers is not of type bson.M")
 		}
 
 		// Extract the "user" field
@@ -83,13 +83,13 @@ func (m *mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.
 		m.log.Error(context.Background(), "authenticatedUsers is empty")
 	}
 
-	return models.WhoAmIResponse{
+	return models.MongoDBWhoAmIResponse{
 		Username: username,
 	}, nil
 }
 
-func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, error) {
-	var result models.LsResponse
+func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResponse, error) {
+	var result models.MongoDBLsResponse
 	lsCmd := &models.LsOptions{
 		LongListing: false,
 		Color:       false,
@@ -98,7 +98,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 
 	for _, opt := range lsOptions {
 		if err := opt(lsCmd); err != nil {
-			return models.LsResponse{}, err
+			return models.MongoDBLsResponse{}, err
 		}
 	}
 
@@ -117,7 +117,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 			log.Panic(err)
 		}
 		m.log.Debug(context.Background(), "List of databases", "db", dbList)
-		var database models.Database
+		var database models.MongoDBDatabase
 		for _, dbName := range dbList {
 			database.Name = dbName
 			database.Perms = "rw-rw-rw-"       // Placeholder, as MongoDB does not provide permissions in ListDatabaseNames
@@ -143,7 +143,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 				m.log.Error(context.Background(), "Failed to list collections", "error", err)
 			}
 			m.log.Debug(context.Background(), "List of collections", "db", dbName, "collections", collections)
-			result.Databases = []models.Database{
+			result.Databases = []models.MongoDBDatabase{
 				{
 					Name:         dbName,
 					Perms:        "rw-rw-rw-", // Placeholder, as MongoDB does not provide permissions in ListDatabaseNames
@@ -153,7 +153,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 					LastModified: time.Now(),  // Placeholder, as MongoDB does not provide last modified in ListDatabaseNames
 				},
 			}
-			var collection models.Collection
+			var collection models.MongoDBCollection
 			for _, collectionName := range collections {
 				collection.Name = collectionName
 				collection.Perms = "rw-rw-rw-"       // Placeholder, as MongoDB does not provide permissions in ListCollectionNames
@@ -172,7 +172,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 			if err != nil {
 				m.log.Error(context.Background(), "Failed to list collection info", "error", err)
 			}
-			result.Databases = []models.Database{
+			result.Databases = []models.MongoDBDatabase{
 				{
 					Name:         dbName,
 					Perms:        "rw-rw-rw-", // Placeholder, as MongoDB does not provide permissions in ListCollectionNames
@@ -182,7 +182,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 					LastModified: time.Now(),  // Placeholder, as MongoDB does not provide last modified in ListCollectionNames
 				},
 			}
-			result.Collections = []models.Collection{
+			result.Collections = []models.MongoDBCollection{
 				{
 					Name:         collectionName,
 					Perms:        "rw-rw-rw-", // Placeholder, as MongoDB does not provide permissions in ListCollectionNames
@@ -202,7 +202,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 					m.log.Error(context.Background(), "Index name is not a string", "index", index)
 					continue
 				}
-				result.Indexes = append(result.Indexes, models.Index{Name: indexName})
+				result.Indexes = append(result.Indexes, models.MongoDBIndex{Name: indexName})
 			}
 			m.log.Debug(context.Background(), "List of indexes", "db", dbName, "collection", collectionName, "indexes", result.Indexes)
 		}
@@ -212,8 +212,8 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.LsResponse, e
 
 // Du is equivalent to the du command in Unix-like systems.
 // It is used to calculate the disk usage of database or collection.
-func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, error) {
-	var result models.DuResponse
+func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.MongoDBDuResponse, error) {
+	var result models.MongoDBDuResponse
 
 	var dbName, collectionName string
 
@@ -223,7 +223,7 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, e
 
 	for _, opt := range duOptions {
 		if err := opt(duCmd); err != nil {
-			return models.DuResponse{}, err
+			return models.MongoDBDuResponse{}, err
 		}
 	}
 
@@ -253,7 +253,7 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, e
 				m.log.Error(context.Background(), "Failed to get collection stats", collectionName, err)
 			}
 			m.log.Debug(context.Background(), "Collection size in bytes", collectionName, stats["size"])
-			result = models.DuResponse{
+			result = models.MongoDBDuResponse{
 				Database:   dbName,
 				Collection: collectionName,
 				Size:       int64(stats["size"].(int32)),
@@ -265,7 +265,7 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, e
 				m.log.Error(context.Background(), "Failed to get database stats", dbName, err)
 			}
 			m.log.Debug(context.Background(), "Database size: in bytes", dbName, stats["dataSize"])
-			result = models.DuResponse{
+			result = models.MongoDBDuResponse{
 				Database:   dbName,
 				Collection: "",
 				Size:       stats["dataSize"].(int64),
@@ -277,10 +277,10 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.DuResponse, e
 
 // Touch is equivalent to the touch command in Unix-like systems.
 // It is used to create an empty collection in the database.
-func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.TouchResponse, error) {
+func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.MongoDBTouchResponse, error) {
 
 	var dbName, collectionName string
-	var result models.TouchResponse
+	var result models.MongoDBTouchResponse
 
 	touchCmd := &models.TouchOptions{
 		Args: []string{},
@@ -288,14 +288,14 @@ func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.Touc
 
 	for _, opt := range touchOptions {
 		if err := opt(touchCmd); err != nil {
-			return models.TouchResponse{}, err
+			return models.MongoDBTouchResponse{}, err
 		}
 	}
 
 	m.log.Debug(context.Background(), "provided command with options", "args", touchCmd.Args)
 	if len(touchCmd.Args) == 0 {
 		m.log.Error(context.Background(), "Expected format is database/collection", "received", "empty")
-		return models.TouchResponse{}, errors.New("expected format: iza touch database/collection")
+		return models.MongoDBTouchResponse{}, errors.New("expected format: iza touch database/collection")
 	}
 
 	// Iterate the arguments and create a collection for each
@@ -328,9 +328,9 @@ func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.Touc
 
 // Cat is equivalent to the cat command in Unix-like systems.
 // It is used to display the contents of a document in the collection.
-func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) (models.CatResponse, error) {
+func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) (models.MongoDBCatResponse, error) {
 
-	var result models.CatResponse
+	var result models.MongoDBCatResponse
 	catCmd := &models.CatOptions{
 		Args: []string{},
 	}
@@ -339,7 +339,7 @@ func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) (models.CatRespons
 
 	for _, opt := range catOptions {
 		if err := opt(catCmd); err != nil {
-			return models.CatResponse{}, err
+			return models.MongoDBCatResponse{}, err
 		}
 	}
 

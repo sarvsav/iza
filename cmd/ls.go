@@ -95,12 +95,20 @@ It will list:
 		}
 		switch service {
 		case "cicd":
-			result, err := application.CiCdService.Ls()
+			result, err := application.CiCdService.Ls(
+				WithLsLongListing(longListingValue),
+				WithLsColor(colorValue),
+				WithLsArgs(args))
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-			fmt.Println(result)
+			for _, jobFolder := range result.JenkinsJobFolders {
+				printEntry("d", jobFolder.Name, jobFolder.Perms, jobFolder.Owner, jobFolder.Group, jobFolder.Size, jobFolder.LastModified)
+			}
+			for _, job := range result.JenkinsJobs {
+				printEntry(".", job.Name, job.Perms, job.Owner, job.Group, job.Size, job.LastModified)
+			}
 		case "datastore":
 			result, err := application.DataStoreService.Ls(
 				WithLsLongListing(longListingValue),
