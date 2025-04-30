@@ -31,8 +31,8 @@ import (
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
 	"github.com/joho/godotenv"
+	"github.com/sarvsav/iza/client"
 	"github.com/sarvsav/iza/cmd"
-	"github.com/sarvsav/iza/database"
 	"github.com/sarvsav/iza/dbstore"
 	"github.com/sarvsav/iza/devops"
 	"github.com/sarvsav/iza/foundation/logger"
@@ -156,9 +156,9 @@ func main() {
 
 	// -------------------------------------------------------------------------
 	// Get mongo client
-	client, err := database.GetMongoClient()
+	mc, err := client.GetMongoClient()
 	defer func() {
-		if err := database.DisconnectMongoClient(client); err != nil {
+		if err := client.DisconnectMongoClient(mc); err != nil {
 			log.Error(context.Background(), "Failed to disconnect from MongoDB", "error", err)
 		}
 	}()
@@ -169,9 +169,13 @@ func main() {
 	}
 
 	// -------------------------------------------------------------------------
+	// Get Jenkins client
+	jc, _ := client.GetJenkinsClient()
+
+	// -------------------------------------------------------------------------
 	// Setup application
-	jenkinsClient := devops.NewJenkinsClient("user", "some-api-token")
-	mongoClient := dbstore.NewMongoClient(client, log)
+	jenkinsClient := devops.NewJenkinsClient(jc, log)
+	mongoClient := dbstore.NewMongoClient(mc, log)
 	app := &app.Application{
 		CiCdService:      cicd.NewCiCdService(jenkinsClient, log),
 		DataStoreService: datastore.NewDataStoreService(mongoClient, log),

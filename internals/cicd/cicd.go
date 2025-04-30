@@ -35,14 +35,7 @@ func (ci *CiCdService) Du() (int, error) {
 	return diskUsage, nil
 }
 
-func (ci *CiCdService) Ls() (string, error) {
-	listOfFiles, err := ci.devops.Ls()
-	if err != nil {
-		return "", err
-	}
 
-	return listOfFiles, nil
-}
 
 func (ci *CiCdService) Touch() (string, error) {
 	fileCreated, err := ci.devops.Touch()
