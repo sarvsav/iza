@@ -20,6 +20,11 @@ type LsOptions struct {
 	Args        []string
 }
 
+type OptionsPsFunc func(c *PsOptions) error
+
+type PsOptions struct {
+}
+
 type OptionsTouchFunc func(c *TouchOptions) error
 
 type TouchOptions struct {

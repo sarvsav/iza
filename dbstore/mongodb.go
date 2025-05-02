@@ -3,6 +3,7 @@ package dbstore
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -388,4 +389,38 @@ func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) (models.MongoDBCat
 	}
 
 	return result, nil
+}
+
+// Ps is equivalent to the ps command in Unix-like systems.
+// It shows in-progress operations for the database instance
+func (m mongoClient) Ps(psOptions ...models.OptionsPsFunc) (models.MongoDBPsResponse, error) {
+
+	psCmd := &models.PsOptions{}
+
+	for _, opt := range psOptions {
+		if err := opt(psCmd); err != nil {
+			return models.MongoDBPsResponse{}, err
+		}
+	}
+
+	m.log.Debug(context.Background(), "provided command with options", "args", psCmd)
+
+	// Define the command to run
+	command := bson.D{
+		{
+			Key:   "currentOp",
+			Value: 1,
+		},
+	}
+	// Run the command
+	result := m.mc.Database("admin").RunCommand(context.TODO(), command)
+	// Decode the result
+	var currentOps map[string]interface{}
+	if err := result.Decode(&currentOps); err != nil {
+		fmt.Println("Error decoding result:", err)
+		return models.MongoDBPsResponse{}, err
+	}
+	// Print the result
+	fmt.Println("Current Operations:", currentOps)
+	return models.MongoDBPsResponse{}, nil
 }
