@@ -421,6 +421,39 @@ func (m mongoClient) Ps(psOptions ...models.OptionsPsFunc) (models.MongoDBPsResp
 		return models.MongoDBPsResponse{}, err
 	}
 	// Print the result
-	fmt.Println("Current Operations:", currentOps)
+	// fmt.Println("Current Operations:", currentOps)
+	inprog, ok := currentOps["inprog"].(primitive.A)
+	if !ok {
+		log.Println("No active operations found")
+	}
+	type OpEntry struct {
+		OpID     int64
+		Active   bool
+		Op       string
+		NS       string
+		Command  string
+		Client   string
+		Duration int64
+	}
+
+	var ops []OpEntry
+	for _, item := range inprog {
+		if op, ok := item.(bson.M); ok {
+			ops = append(ops, OpEntry{
+				OpID:     toInt64(op["opid"]),
+				Active:   toBool(op["active"]),
+				Op:       toString(op["op"]),
+				NS:       toString(op["ns"]),
+				Command:  toString(op["command"]),
+				Client:   toString(op["client"]),
+				Duration: toInt64(op["secs_running"]),
+			})
+		}
+	}
+
+	fmt.Println(currentOps)
+
+	fmt.Println("Current Operations:", ops)
+
 	return models.MongoDBPsResponse{}, nil
 }
