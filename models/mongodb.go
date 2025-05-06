@@ -23,6 +23,10 @@ type MongoDBLsResponse struct {
 	Indexes     []MongoDBIndex
 }
 
+type MongoDBPsResponse struct {
+	Data []any
+}
+
 type MongoDBDatabase struct {
 	Name         string
 	Size         int64     // In bytes

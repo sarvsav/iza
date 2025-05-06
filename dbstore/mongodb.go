@@ -3,6 +3,7 @@ package dbstore
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -388,4 +389,71 @@ func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) (models.MongoDBCat
 	}
 
 	return result, nil
+}
+
+// Ps is equivalent to the ps command in Unix-like systems.
+// It shows in-progress operations for the database instance
+func (m mongoClient) Ps(psOptions ...models.OptionsPsFunc) (models.MongoDBPsResponse, error) {
+
+	psCmd := &models.PsOptions{}
+
+	for _, opt := range psOptions {
+		if err := opt(psCmd); err != nil {
+			return models.MongoDBPsResponse{}, err
+		}
+	}
+
+	m.log.Debug(context.Background(), "provided command with options", "args", psCmd)
+
+	// Define the command to run
+	command := bson.D{
+		{
+			Key:   "currentOp",
+			Value: 1,
+		},
+	}
+	// Run the command
+	result := m.mc.Database("admin").RunCommand(context.TODO(), command)
+	// Decode the result
+	var currentOps map[string]interface{}
+	if err := result.Decode(&currentOps); err != nil {
+		fmt.Println("Error decoding result:", err)
+		return models.MongoDBPsResponse{}, err
+	}
+	// Print the result
+	// fmt.Println("Current Operations:", currentOps)
+	inprog, ok := currentOps["inprog"].(primitive.A)
+	if !ok {
+		log.Println("No active operations found")
+	}
+	type OpEntry struct {
+		OpID     int64
+		Active   bool
+		Op       string
+		NS       string
+		Command  string
+		Client   string
+		Duration int64
+	}
+
+	var ops []OpEntry
+	for _, item := range inprog {
+		if op, ok := item.(bson.M); ok {
+			ops = append(ops, OpEntry{
+				OpID:     toInt64(op["opid"]),
+				Active:   toBool(op["active"]),
+				Op:       toString(op["op"]),
+				NS:       toString(op["ns"]),
+				Command:  toString(op["command"]),
+				Client:   toString(op["client"]),
+				Duration: toInt64(op["secs_running"]),
+			})
+		}
+	}
+
+	fmt.Println(currentOps)
+
+	fmt.Println("Current Operations:", ops)
+
+	return models.MongoDBPsResponse{}, nil
 }
