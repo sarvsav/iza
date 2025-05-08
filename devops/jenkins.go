@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/sarvsav/iza/foundation/logger"
@@ -43,7 +44,8 @@ func (j jenkinsClient) Ls(lsOptions ...models.OptionsLsFunc) (models.JenkinsLsRe
 		}
 	}
 
-	url := "somejenkinsurl.com"
+	blueOceanUrl := "/blue/rest/organizations/jenkins/pipelines"
+	url := os.Getenv("JENKINS_URL") + blueOceanUrl
 
 	if len(lsCmd.Args) > 0 {
 		url += "/" + lsCmd.Args[0] + "/pipelines"
