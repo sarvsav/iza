@@ -23,6 +23,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"net/http"
 	"os"
 
 	_ "embed"
@@ -39,6 +41,7 @@ import (
 	"github.com/sarvsav/iza/internals/app"
 	"github.com/sarvsav/iza/internals/cicd"
 	"github.com/sarvsav/iza/internals/datastore"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // for cue configuration
@@ -50,11 +53,34 @@ var DevSchema string
 //go:embed cue/prod/schema.cue
 var ProdSchema string
 
+type NamedMongoClient struct {
+	Name   string
+	Client *mongo.Client
+}
+
+type NamedPostgresClient struct {
+	Name   string
+	Client *sql.DB
+}
+
+type NamedHTTPClient struct {
+	Name   string
+	Client *http.Client
+}
+
+type ClientRegistry struct {
+	Mongo    []NamedMongoClient
+	Postgres []NamedPostgresClient
+	JFrog    []NamedHTTPClient
+	Jenkins  []NamedHTTPClient
+}
+
 func main() {
 
 	// -------------------------------------------------------------------------
 	// Setup logger
 	var log *logger.Logger
+	clientRegistry := ClientRegistry{}
 
 	// Warn and Error are custom events and called when the log calls Warn or Error
 	// For example, if log.Warn is called, then the function defined in Warn will be called
@@ -118,6 +144,32 @@ func main() {
 		for iter.Next() {
 			selector := iter.Selector()
 			log.Debug(context.Background(), "database entry", "selector", selector.String(), "value", iter.Value())
+			kindVal := iter.Value().LookupPath(cue.ParsePath("type"))
+			if kindVal.Exists() {
+				kind, _ := kindVal.String()
+				switch kind {
+				case "mongodb":
+					clientName := selector.String()
+					// Get mongo client
+					mc, err := client.GetMongoClient()
+					defer func() {
+						if err := client.DisconnectMongoClient(mc); err != nil {
+							log.Error(context.Background(), "Failed to disconnect from MongoDB", "error", err)
+						}
+					}()
+
+					if err != nil {
+						log.Error(context.Background(), "Failed to connect to MongoDB", "error", err)
+						return
+					}
+					clientRegistry.Mongo = append(clientRegistry.Mongo, NamedMongoClient{Name: clientName, Client: mc})
+				case "postgres":
+					clientName := selector.String()
+					clientRegistry.Postgres = append(clientRegistry.Postgres, NamedPostgresClient{Name: clientName, Client: nil})
+				default:
+					log.Debug(context.Background(), "Unknown database type", "type", kind)
+				}
+			}
 		}
 	}
 
@@ -138,16 +190,30 @@ func main() {
 		for iter.Next() {
 			selector := iter.Selector()
 			log.Debug(context.Background(), "ci_tools entry", "selector", selector.String(), "value", iter.Value())
+			kindVal := iter.Value().LookupPath(cue.ParsePath("type"))
+			if kindVal.Exists() {
+				kind, _ := kindVal.String()
+				switch kind {
+				case "jenkins":
+					clientName := selector.String()
+					// Get jenkins client
+					jc, _ := client.GetJenkinsClient()
+					clientRegistry.Jenkins = append(clientRegistry.Jenkins, NamedHTTPClient{Name: clientName, Client: jc})
+				default:
+					log.Debug(context.Background(), "Unknown cicd type", "type", kind)
+				}
+			}
+
 		}
 	}
 
 	// Extract the full JSON configuration for debugging
-	jsonData, err := config.MarshalJSON()
-	if err != nil {
-		log.Error(context.Background(), "Error marshalling CUE to JSON", "error", err)
-	}
+	// jsonData, err := config.MarshalJSON()
+	// if err != nil {
+	// 	log.Error(context.Background(), "Error marshalling CUE to JSON", "error", err)
+	// }
 
-	log.Debug(context.Background(), "CUE configuration", "json", string(jsonData))
+	// log.Debug(context.Background(), "CUE configuration", "json", string(jsonData))
 
 	// Validate the CUE data (optional but recommended).
 	if err := value.Validate(); err != nil {
@@ -155,27 +221,9 @@ func main() {
 	}
 
 	// -------------------------------------------------------------------------
-	// Get mongo client
-	mc, err := client.GetMongoClient()
-	defer func() {
-		if err := client.DisconnectMongoClient(mc); err != nil {
-			log.Error(context.Background(), "Failed to disconnect from MongoDB", "error", err)
-		}
-	}()
-
-	if err != nil {
-		log.Error(context.Background(), "Failed to connect to MongoDB", "error", err)
-		return
-	}
-
-	// -------------------------------------------------------------------------
-	// Get Jenkins client
-	jc, _ := client.GetJenkinsClient()
-
-	// -------------------------------------------------------------------------
 	// Setup application
-	jenkinsClient := devops.NewJenkinsClient(jc, log)
-	mongoClient := dbstore.NewMongoClient(mc, log)
+	jenkinsClient := devops.NewJenkinsClient(clientRegistry.Jenkins[0].Client, log)
+	mongoClient := dbstore.NewMongoClient(clientRegistry.Mongo[0].Client, log)
 	app := &app.Application{
 		CiCdService:      cicd.NewCiCdService(jenkinsClient, log),
 		DataStoreService: datastore.NewDataStoreService(mongoClient, log),
