@@ -61,7 +61,7 @@ config: config & {
         },
         github_actions: {
             kind: "ci-tools",
-            tool: "GitHub Actions",
+            type: "gh-actions",
             endpoint: "https://github.com/actions",
             auth: {
                 method: "basic",

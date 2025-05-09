@@ -4,6 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/user"
+	"path"
+	"strings"
+	"time"
 
 	"github.com/sarvsav/iza/internals/app"
 	"github.com/sarvsav/iza/version"
@@ -20,6 +24,14 @@ func checkCueConfig() error {
 		return errors.New("❌ config.cue file not found. Please run `iza init` to create it")
 	}
 	return nil
+}
+
+func TouchFile(filePath string) error {
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	return file.Close()
 }
 
 // rootCmd represents the base command when called without any subcommands
@@ -84,6 +96,35 @@ func init() {
 
 	logDir := userHomeDir + "/.iza/logs"
 	logFileName := "iza_" + version.Get().String() + ".log"
+	historyFile := path.Join(userHomeDir, ".iza", "history")
+	if _, err := os.Stat(historyFile); os.IsNotExist(err) {
+		err := TouchFile(historyFile)
+		if err != nil {
+			fmt.Println("Error creating history file:", err)
+			os.Exit(1)
+		}
+		err = os.WriteFile(historyFile, []byte("host, user, working directory, timestamp, command\n"), 0644)
+		if err != nil {
+			fmt.Println("Error writing to history file:", err)
+			os.Exit(1)
+		}
+	}
+
+	hostname, _ := os.Hostname()
+	currentUser, _ := user.Current()
+	workingDir, _ := os.Getwd()
+	startTime := time.Now().Format(time.RFC3339)
+
+	hf, err := os.OpenFile(historyFile, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("Error opening history file:", err)
+		os.Exit(1)
+	}
+	defer hf.Close()
+	if _, err := hf.Write([]byte(fmt.Sprintf("%s, %s, %s, %s, %s\n", hostname, currentUser.Username, workingDir, startTime, strings.Join(os.Args[1:], " ")))); err != nil {
+		fmt.Println("Error writing to history file:", err)
+		os.Exit(1)
+	}
 
 	// Create log directory if it does not exist
 	if _, err := os.Stat(logDir); os.IsNotExist(err) {
