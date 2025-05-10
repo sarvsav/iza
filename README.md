@@ -116,7 +116,7 @@ You need to have Go installed on your machine to run the project.
 go install github.com/sarvsav/iza/cmd/iza@latest
 ```
 
-## List of available commands
+## List of available commands for services
 
 Available commands for different services are listed below.
 
@@ -125,7 +125,8 @@ Available commands for different services are listed below.
 | `cat`   |   []    |    []      |   []    |  []   |
 | `du`    |   []    |    []      |   []    |  []   |
 | `ls`    |   []    |    []      |   []    |  []   |
-
+| `touch` |   []    |    []      |   []    |  []   |
+| `whoami`|   []    |    []      |   []    |  []   |
 
 <!-- USAGE EXAMPLES -->
 ## Usage
