@@ -116,6 +116,17 @@ You need to have Go installed on your machine to run the project.
 go install github.com/sarvsav/iza/cmd/iza@latest
 ```
 
+## List of available commands
+
+Available commands for different services are listed below.
+
+| Command | MongoDB | PostgreSQL | Jenkins | JFrog |
+| ------- | ------- | ---------- | ------- | ----- |
+| `cat`   |   []    |    []      |   []    |  []   |
+| `du`    |   []    |    []      |   []    |  []   |
+| `ls`    |   []    |    []      |   []    |  []   |
+
+
 <!-- USAGE EXAMPLES -->
 ## Usage
 
