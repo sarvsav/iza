@@ -277,7 +277,7 @@ func (m Model) View() string {
 	}
 
 	if m.Stage == 2 {
-		s += fmt.Sprintf("🔒 Review your information:\n\n")
+		s += "🔒 Review your information:\n\n"
 
 		labels := map[string][]string{
 			"mongodb": {"MongoDB URL", "Username", "Password"},
@@ -309,7 +309,7 @@ func (m Model) View() string {
 
 	if m.Stage == 3 {
 		msg := "✅ Details saved successfully!\n\n👉 You can now run:\n\n" +
-			boldStyle.Render("myapp ls") + "\n\n" +
+			boldStyle.Render("iza ls") + "\n\n" +
 			"Press " + boldStyle.Render("q") + " or " + boldStyle.Render("Enter") + " to exit."
 
 		successBox := lipgloss.NewStyle().
