@@ -30,3 +30,6 @@ dist/
 # Adding editor config files
 .idea/
 .vscode/
+
+# tmp directory
+tmp/
