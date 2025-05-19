@@ -1,4 +1,4 @@
-package artifactory
+package artifactstore
 
 import (
 	"github.com/sarvsav/iza/artifactory"

@@ -33,12 +33,14 @@ import (
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
 	"github.com/joho/godotenv"
+	"github.com/sarvsav/iza/artifactory"
 	"github.com/sarvsav/iza/client"
 	"github.com/sarvsav/iza/cmd"
 	"github.com/sarvsav/iza/dbstore"
 	"github.com/sarvsav/iza/devops"
 	"github.com/sarvsav/iza/foundation/logger"
 	"github.com/sarvsav/iza/internals/app"
+	"github.com/sarvsav/iza/internals/artifactstore"
 	"github.com/sarvsav/iza/internals/cicd"
 	"github.com/sarvsav/iza/internals/datastore"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -94,7 +96,7 @@ func main() {
 		return "00000000-0000-0000-0000-000000000000"
 	}
 
-	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "IZA", traceIDFn, events)
+	log = logger.NewWithEvents(os.Stdout, logger.LevelDebug, "IZA", traceIDFn, events)
 
 	// -------------------------------------------------------------------------
 	// Load environment variables
@@ -174,12 +176,25 @@ func main() {
 	}
 
 	// Extract and print Artifactory entries
-	artifactory := config.LookupPath(cue.ParsePath("artifactory"))
-	if artifactory.Exists() {
-		iter, _ := artifactory.Fields()
+	artifactoryTools := config.LookupPath(cue.ParsePath("artifactory"))
+	if artifactoryTools.Exists() {
+		iter, _ := artifactoryTools.Fields()
 		for iter.Next() {
 			selector := iter.Selector()
 			log.Debug(context.Background(), "artifactory entry", "selector", selector.String(), "value", iter.Value())
+			kindVal := iter.Value().LookupPath(cue.ParsePath("type"))
+			if kindVal.Exists() {
+				kind, _ := kindVal.String()
+				switch kind {
+				case "jfrog":
+					clientName := selector.String()
+					// Get jfrog client
+					jc, _ := client.GetJFrogClient()
+					clientRegistry.JFrog = append(clientRegistry.JFrog, NamedHTTPClient{Name: clientName, Client: jc})
+				default:
+					log.Debug(context.Background(), "Unknown artifactory type", "type", kind)
+				}
+			}
 		}
 	}
 
@@ -199,11 +214,12 @@ func main() {
 					// Get jenkins client
 					jc, _ := client.GetJenkinsClient()
 					clientRegistry.Jenkins = append(clientRegistry.Jenkins, NamedHTTPClient{Name: clientName, Client: jc})
+				case "gh-actions":
+					// Not implemented yet
 				default:
 					log.Debug(context.Background(), "Unknown cicd type", "type", kind)
 				}
 			}
-
 		}
 	}
 
@@ -222,12 +238,14 @@ func main() {
 
 	// -------------------------------------------------------------------------
 	// Setup application
+	jFrogClient := artifactory.NewJFrogClient(clientRegistry.JFrog[0].Client, log)
 	jenkinsClient := devops.NewJenkinsClient(clientRegistry.Jenkins[0].Client, log)
 	mongoClient := dbstore.NewMongoClient(clientRegistry.Mongo[0].Client, log)
 	app := &app.Application{
-		CiCdService:      cicd.NewCiCdService(jenkinsClient, log),
-		DataStoreService: datastore.NewDataStoreService(mongoClient, log),
-		Logger:           log,
+		ArtifactoryService: artifactstore.NewArtifactoryService(jFrogClient, log),
+		CiCdService:        cicd.NewCiCdService(jenkinsClient, log),
+		DataStoreService:   datastore.NewDataStoreService(mongoClient, log),
+		Logger:             log,
 	}
 
 	// -------------------------------------------------------------------------

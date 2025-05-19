@@ -23,6 +23,7 @@ config: {
 // Artifactory Schema
 #Artifactory: {
     kind: "artifactory",
+    type: "jfrog",                             // Limit to JFrog Artifactory
     url:  string & =~"^https://.*$",              // URL should be HTTPS
     repo: string,
     auth?: {
