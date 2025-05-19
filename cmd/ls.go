@@ -94,6 +94,24 @@ It will list:
 			return
 		}
 		switch service {
+		case "artifactory":
+			result, err := application.ArtifactoryService.Ls(
+				WithLsLongListing(longListingValue),
+				WithLsColor(colorValue),
+				WithLsArgs(args))
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			for _, repo := range result.ArtifactoryRepos {
+				printEntry("d", repo.Name, repo.Perms, repo.Owner, repo.Group, repo.Size, repo.LastModified)
+			}
+			for _, folder := range result.ArtifactoryFolders {
+				printEntry("d", folder.Name, folder.Perms, folder.Owner, folder.Group, folder.Size, folder.LastModified)
+			}
+			for _, file := range result.ArtifactoryFiles {
+				printEntry(".", file.Name, file.Perms, file.Owner, file.Group, file.Size, file.LastModified)
+			}
 		case "cicd":
 			result, err := application.CiCdService.Ls(
 				WithLsLongListing(longListingValue),

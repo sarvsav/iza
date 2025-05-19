@@ -11,39 +11,6 @@ type JFrogArtifactoryJob struct {
 	LastModified time.Time // Last run
 }
 
-type JFrogArtifactoryResponse struct {
-	JFrogArtifactoryRepos   []JFrogArtifactoryRepo
-	JFrogArtifactoryFolders []JFrogArtifactoryFolder
-	JFrogArtifactoryFiles   []JFrogArtifactoryFile
-}
-
-type JFrogArtifactoryRepo struct {
-	Name         string
-	Size         int64     // In bytes
-	Perms        string    // Permissions (read/stop/start/create/configure)
-	Owner        string    // Owner
-	Group        string    // Group
-	LastModified time.Time // Last run
-}
-
-type JFrogArtifactoryFolder struct {
-	Name         string
-	Size         int64     // In bytes
-	Perms        string    // Permissions (read/stop/start/create/configure)
-	Owner        string    // Owner
-	Group        string    // Group
-	LastModified time.Time // Last run
-}
-
-type JFrogArtifactoryFile struct {
-	Name         string
-	Size         int64     // In bytes
-	Perms        string    // Permissions (read/stop/start/create/configure)
-	Owner        string    // Owner
-	Group        string    // Group
-	LastModified time.Time // Last run
-}
-
 type JFrogArtifactoryApiResponse struct {
 	Repo         string     `json:"repo"`
 	Path         string     `json:"path"`
@@ -63,4 +30,16 @@ type Children struct {
 type Errors struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
+}
+
+type JFrogResult struct {
+	JFrogResponse ArtifactoryLsResponseData
+}
+
+func (jfr JFrogResult) isArtifactoryResponse() {
+	// marker function
+}
+
+func (jfr JFrogResult) GetResult() (ArtifactoryLsResponseData, error) {
+	return jfr.JFrogResponse, nil
 }

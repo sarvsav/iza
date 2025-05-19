@@ -23,6 +23,7 @@ config: {
 // Artifactory Schema
 #Artifactory: {
     kind: "artifactory",
+    type: "jfrog",                             // Limit to JFrog Artifactory
     url:  string & =~"^https://.*$",              // URL should be HTTPS
     repo: string,
     auth?: {
@@ -35,7 +36,7 @@ config: {
 // CI/CD Tools Schema
 #CITools: {
     kind:      "ci-tools",
-    type:      "jenkins" | "GitHub Actions" | "GitLab CI",  // Limit to these CI tools
+    type:      "jenkins" | "gh-actions",  // Limit to these CI tools
     endpoint:  string & =~"^https://.*$",              // Endpoint should be HTTPS
     auth?: {
         method: "token" | "basic",                     // Limit to "token" or "basic" auth

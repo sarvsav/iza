@@ -40,6 +40,7 @@ config: config & {
     artifactory: {
         artifactory01: {
             kind: "artifactory",
+            type: "jfrog",
             url: "https://artifactory.example.com",
             repo: "repo01",
             auth: {
