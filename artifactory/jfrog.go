@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/sarvsav/iza/foundation/logger"
 	"github.com/sarvsav/iza/models"
@@ -40,7 +41,40 @@ func (j jFrogClient) Ls(lsOptions ...models.OptionsLsFunc) (models.JFrogResult, 
 		}
 	}
 
-	return models.JFrogResult{}, nil
+	return models.JFrogResult{
+		JFrogResponse: models.ArtifactoryLsResponseData{
+			ArtifactoryRepos: []models.ArtifactoryRepoData{
+				{
+					Name:         "repo1",
+					Size:         123456,
+					Perms:        "rwxr-xr-x",
+					Owner:        "owner1",
+					Group:        "group1",
+					LastModified: time.Now(),
+				},
+			},
+			ArtifactoryFiles: []models.ArtifactoryFileData{
+				{
+					Name:         "file1",
+					Size:         123456,
+					Perms:        "rwxr-xr-x",
+					Owner:        "owner1",
+					Group:        "group1",
+					LastModified: time.Now(),
+				},
+			},
+			ArtifactoryFolders: []models.ArtifactoryFolderData{
+				{
+					Name:         "folder1",
+					Size:         123456,
+					Perms:        "rwxr-xr-x",
+					Owner:        "owner1",
+					Group:        "group1",
+					LastModified: time.Now(),
+				},
+			},
+		},
+	}, nil
 
 }
 
