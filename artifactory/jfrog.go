@@ -27,7 +27,7 @@ func (j jFrogClient) Du() (int, error) {
 	return 0, nil
 }
 
-func (j jFrogClient) Ls(lsOptions ...models.OptionsLsFunc) (models.JFrogArtifactoryLsResponse, error) {
+func (j jFrogClient) Ls(lsOptions ...models.OptionsLsFunc) (models.JFrogResult, error) {
 	lsCmd := &models.LsOptions{
 		LongListing: false,
 		Color:       false,
@@ -36,11 +36,11 @@ func (j jFrogClient) Ls(lsOptions ...models.OptionsLsFunc) (models.JFrogArtifact
 
 	for _, opt := range lsOptions {
 		if err := opt(lsCmd); err != nil {
-			return models.JFrogArtifactoryLsResponse{}, err
+			return models.JFrogResult{}, err
 		}
 	}
 
-	return models.JFrogArtifactoryLsResponse{}, nil
+	return models.JFrogResult{}, nil
 
 }
 

@@ -103,13 +103,13 @@ It will list:
 				fmt.Println(err)
 				return
 			}
-			for _, repo := range result.Repos {
+			for _, repo := range result.ArtifactoryRepos {
 				printEntry("d", repo.Name, repo.Perms, repo.Owner, repo.Group, repo.Size, repo.LastModified)
 			}
-			for _, folder := range result.Folders {
+			for _, folder := range result.ArtifactoryFolders {
 				printEntry("d", folder.Name, folder.Perms, folder.Owner, folder.Group, folder.Size, folder.LastModified)
 			}
-			for _, file := range result.Files {
+			for _, file := range result.ArtifactoryFiles {
 				printEntry(".", file.Name, file.Perms, file.Owner, file.Group, file.Size, file.LastModified)
 			}
 		case "cicd":

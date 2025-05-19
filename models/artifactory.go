@@ -36,6 +36,6 @@ type ArtifactoryFileData struct {
 }
 
 type ArtifactoryLsResponse interface {
-	GetRepos() []ArtifactoryLsResponseData
+	GetResult() (ArtifactoryLsResponseData, error)
 	isArtifactoryLsResponse() // marker method
 }

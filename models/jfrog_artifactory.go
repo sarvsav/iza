@@ -32,6 +32,14 @@ type Errors struct {
 	Message string `json:"message"`
 }
 
-func (jfls JFrogArtifactoryLsResponse) isArtifactoryResponse() {
+type JFrogResult struct {
+	JFrogResponse ArtifactoryLsResponseData
+}
+
+func (jfr JFrogResult) isArtifactoryResponse() {
 	// marker function
+}
+
+func (jfr JFrogResult) GetResult() (ArtifactoryLsResponseData, error) {
+	return jfr.JFrogResponse, nil
 }
