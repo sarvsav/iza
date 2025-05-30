@@ -28,7 +28,7 @@ func (j jFrogClient) Du() (int, error) {
 	return 0, nil
 }
 
-func (j jFrogClient) Ls(lsOptions ...models.OptionsLsFunc) (models.JFrogResult, error) {
+func (j jFrogClient) Ls(lsOptions ...models.OptionsLsFunc) (models.ArtifactoryLsResponse, error) {
 	lsCmd := &models.LsOptions{
 		LongListing: false,
 		Color:       false,

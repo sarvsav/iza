@@ -36,7 +36,7 @@ type JFrogResult struct {
 	JFrogResponse ArtifactoryLsResponseData
 }
 
-func (jfr JFrogResult) isArtifactoryResponse() {
+func (jfr JFrogResult) isArtifactoryLsResponse() {
 	// marker function
 }
 
