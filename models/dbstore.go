@@ -1,6 +1,21 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+)
+
+type DatabaseCatResponseData struct {
+	Documents []bson.M
+	Count     int64
+}
+
+type DatabaseDuResponseData struct {
+	Database   string `json:"database"`
+	Collection string `json:"collection"`
+	Size       int64  `json:"size"`
+}
 
 type DatabaseLsResponseData struct {
 	DatabaseDatabases   []DatabaseDatabaseData
@@ -35,12 +50,20 @@ type DatabaseIndexData struct {
 	LastModified time.Time // Last run
 }
 
+type DatabaseTouchResponseData struct {
+	Name []string
+}
+
 type DatabaseWhoAmIResponseData struct {
 	Username string
 }
 
-type DatabaseTouchResponseData struct {
-	Name []string
+type DatabaseCatResponse interface {
+	GetCatResult() (DatabaseCatResponseData, error)
+}
+
+type DatabaseDuResponse interface {
+	GetDuResult() (DatabaseDuResponseData, error)
 }
 
 type DatabaseLsResponse interface {
@@ -48,10 +71,10 @@ type DatabaseLsResponse interface {
 	isDatabaseLsResponse() // marker method
 }
 
-type DatabaseWhoAmIResponse interface {
-	GetWhoAmIResult() (DatabaseWhoAmIResponseData, error)
-}
-
 type DatabaseTouchResponse interface {
 	GetTouchResult() (DatabaseTouchResponseData, error)
+}
+
+type DatabaseWhoAmIResponse interface {
+	GetWhoAmIResult() (DatabaseWhoAmIResponseData, error)
 }

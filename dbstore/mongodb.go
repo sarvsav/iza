@@ -27,6 +27,135 @@ func NewMongoClient(mc *mongo.Client, log *logger.Logger) *mongoClient {
 	}
 }
 
+// Cat is equivalent to the cat command in Unix-like systems.
+// It is used to display the contents of a document in the collection.
+func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) (models.DatabaseCatResponse, error) {
+
+	var result models.MongoDBResult
+	catCmd := &models.CatOptions{
+		Args: []string{},
+	}
+
+	var dbName, collectionName string
+
+	for _, opt := range catOptions {
+		if err := opt(catCmd); err != nil {
+			return models.MongoDBResult{}, err
+		}
+	}
+
+	m.log.Debug(context.Background(), "provided command with options", "args", catCmd.Args)
+
+	// Iterate the arguments and create a collection for each
+	for _, arg := range catCmd.Args {
+		// Extract db and collection names from the argument
+		argParts := strings.Split(arg, "/")
+		if len(argParts) > 2 {
+			m.log.Error(context.Background(), "Expected format is database/collection", "received", arg)
+		}
+		if len(argParts) == 1 {
+			m.log.Info(context.Background(), "No database provided, reading from test", "received", arg)
+			dbName = "test"
+			collectionName = argParts[0]
+		}
+		if len(argParts) == 2 {
+			m.log.Debug(context.Background(), "Reading from collection", "received", arg)
+			dbName = argParts[0]
+			collectionName = argParts[1]
+		}
+
+		coll := m.mc.Database(dbName).Collection(collectionName)
+		opts := options.Count().SetHint("_id_")
+		count, err := coll.CountDocuments(context.TODO(), bson.D{}, opts)
+		if err != nil {
+			m.log.Error(context.Background(), "Failed to count documents", "error", err)
+		}
+		m.log.Debug(context.Background(), "Total documents in collection", "dbName", dbName, "collection", collectionName, "count", count)
+		result.MongoDBCatResponse.Count = count
+		var results []bson.M
+
+		filter := bson.D{{}}
+
+		// Retrieves documents that match the query filter
+		cursor, err := coll.Find(context.TODO(), filter)
+		if err != nil {
+			panic(err)
+		}
+
+		if err := cursor.All(context.TODO(), &results); err != nil {
+			log.Panic(err)
+		}
+		result.MongoDBCatResponse.Documents = results
+	}
+
+	return result, nil
+}
+
+// Du is equivalent to the du command in Unix-like systems.
+// It is used to calculate the disk usage of database or collection.
+func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.DatabaseDuResponse, error) {
+	var result models.MongoDBResult
+
+	var dbName, collectionName string
+
+	duCmd := &models.DuOptions{
+		Args: []string{},
+	}
+
+	for _, opt := range duOptions {
+		if err := opt(duCmd); err != nil {
+			return models.MongoDBResult{}, err
+		}
+	}
+
+	m.log.Debug(context.Background(), "provided command with options", "args", duCmd.Args)
+
+	// Find db and collection name
+	for _, arg := range duCmd.Args {
+		// Extract db and collection names from the argument
+		argParts := strings.Split(arg, "/")
+		if len(argParts) > 2 {
+			m.log.Error(context.Background(), "Expected format is database/collection", "received", arg)
+		}
+		if len(argParts) == 1 {
+			m.log.Debug(context.Background(), "No collection name provided", "received", arg)
+			dbName = argParts[0]
+			collectionName = ""
+		}
+		if len(argParts) == 2 {
+			m.log.Debug(context.Background(), "Calculating collection size inside db", "received", arg)
+			dbName = argParts[0]
+			collectionName = argParts[1]
+		}
+		if collectionName != "" {
+			stats := bson.M{}
+			err := m.mc.Database(dbName).RunCommand(context.TODO(), bson.D{{Key: "collStats", Value: collectionName}}).Decode(&stats)
+			if err != nil {
+				m.log.Error(context.Background(), "Failed to get collection stats", collectionName, err)
+			}
+			m.log.Debug(context.Background(), "Collection size in bytes", collectionName, stats["size"])
+			result.MongoDBDuResponse = models.DatabaseDuResponseData{
+				Database:   dbName,
+				Collection: collectionName,
+				Size:       int64(stats["size"].(int32)),
+			}
+		} else {
+			stats := bson.M{}
+			err := m.mc.Database(dbName).RunCommand(context.TODO(), bson.D{{Key: "dbStats", Value: 1}}).Decode(&stats)
+			if err != nil {
+				m.log.Error(context.Background(), "Failed to get database stats", dbName, err)
+			}
+			m.log.Debug(context.Background(), "Database size: in bytes", dbName, stats["dataSize"])
+			result.MongoDBDuResponse = models.DatabaseDuResponseData{
+				Database:   dbName,
+				Collection: "",
+				Size:       stats["dataSize"].(int64),
+			}
+		}
+	}
+	return result, nil
+}
+
 func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.DatabaseLsResponse, error) {
 	var result models.MongoDBResult
 	lsCmd := &models.LsOptions{
@@ -261,133 +390,4 @@ func (m *mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.
 			Username: username,
 		},
 	}, nil
-}
-
-// Du is equivalent to the du command in Unix-like systems.
-// It is used to calculate the disk usage of database or collection.
-func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.MongoDBDuResponse, error) {
-	var result models.MongoDBDuResponse
-
-	var dbName, collectionName string
-
-	duCmd := &models.DuOptions{
-		Args: []string{},
-	}
-
-	for _, opt := range duOptions {
-		if err := opt(duCmd); err != nil {
-			return models.MongoDBDuResponse{}, err
-		}
-	}
-
-	m.log.Debug(context.Background(), "provided command with options", "args", duCmd.Args)
-
-	// Find db and collection name
-	for _, arg := range duCmd.Args {
-		// Extract db and collection names from the argument
-		argParts := strings.Split(arg, "/")
-		if len(argParts) > 2 {
-			m.log.Error(context.Background(), "Expected format is database/collection", "received", arg)
-		}
-		if len(argParts) == 1 {
-			m.log.Debug(context.Background(), "No collection name provided", "received", arg)
-			dbName = argParts[0]
-			collectionName = ""
-		}
-		if len(argParts) == 2 {
-			m.log.Debug(context.Background(), "Calculating collection size inside db", "received", arg)
-			dbName = argParts[0]
-			collectionName = argParts[1]
-		}
-		if collectionName != "" {
-			stats := bson.M{}
-			err := m.mc.Database(dbName).RunCommand(context.TODO(), bson.D{{Key: "collStats", Value: collectionName}}).Decode(&stats)
-			if err != nil {
-				m.log.Error(context.Background(), "Failed to get collection stats", collectionName, err)
-			}
-			m.log.Debug(context.Background(), "Collection size in bytes", collectionName, stats["size"])
-			result = models.MongoDBDuResponse{
-				Database:   dbName,
-				Collection: collectionName,
-				Size:       int64(stats["size"].(int32)),
-			}
-		} else {
-			stats := bson.M{}
-			err := m.mc.Database(dbName).RunCommand(context.TODO(), bson.D{{Key: "dbStats", Value: 1}}).Decode(&stats)
-			if err != nil {
-				m.log.Error(context.Background(), "Failed to get database stats", dbName, err)
-			}
-			m.log.Debug(context.Background(), "Database size: in bytes", dbName, stats["dataSize"])
-			result = models.MongoDBDuResponse{
-				Database:   dbName,
-				Collection: "",
-				Size:       stats["dataSize"].(int64),
-			}
-		}
-	}
-	return result, nil
-}
-
-// Cat is equivalent to the cat command in Unix-like systems.
-// It is used to display the contents of a document in the collection.
-func (m mongoClient) Cat(catOptions ...models.OptionsCatFunc) (models.MongoDBCatResponse, error) {
-
-	var result models.MongoDBCatResponse
-	catCmd := &models.CatOptions{
-		Args: []string{},
-	}
-
-	var dbName, collectionName string
-
-	for _, opt := range catOptions {
-		if err := opt(catCmd); err != nil {
-			return models.MongoDBCatResponse{}, err
-		}
-	}
-
-	m.log.Debug(context.Background(), "provided command with options", "args", catCmd.Args)
-
-	// Iterate the arguments and create a collection for each
-	for _, arg := range catCmd.Args {
-		// Extract db and collection names from the argument
-		argParts := strings.Split(arg, "/")
-		if len(argParts) > 2 {
-			m.log.Error(context.Background(), "Expected format is database/collection", "received", arg)
-		}
-		if len(argParts) == 1 {
-			m.log.Info(context.Background(), "No database provided, reading from test", "received", arg)
-			dbName = "test"
-			collectionName = argParts[0]
-		}
-		if len(argParts) == 2 {
-			m.log.Debug(context.Background(), "Reading from collection", "received", arg)
-			dbName = argParts[0]
-			collectionName = argParts[1]
-		}
-
-		coll := m.mc.Database(dbName).Collection(collectionName)
-		opts := options.Count().SetHint("_id_")
-		count, err := coll.CountDocuments(context.TODO(), bson.D{}, opts)
-		if err != nil {
-			m.log.Error(context.Background(), "Failed to count documents", "error", err)
-		}
-		m.log.Debug(context.Background(), "Total documents in collection", "dbName", dbName, "collection", collectionName, "count", count)
-		result.Count = count
-		var results []bson.M
-
-		filter := bson.D{{}}
-
-		// Retrieves documents that match the query filter
-		cursor, err := coll.Find(context.TODO(), filter)
-		if err != nil {
-			panic(err)
-		}
-
-		if err := cursor.All(context.TODO(), &results); err != nil {
-			log.Panic(err)
-		}
-		result.Documents = results
-	}
-
-	return result, nil
 }

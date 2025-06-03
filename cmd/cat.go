@@ -12,7 +12,7 @@ func WithCatArgs(args []string) models.OptionsCatFunc {
 	return func(c *models.CatOptions) error { c.Args = args; return nil }
 }
 
-func printPrettyJSON(results models.MongoDBCatResponse) {
+func printPrettyJSON(results models.DatabaseCatResponseData) {
 	green := color.New(color.FgGreen).SprintFunc()
 	cyan := color.New(color.FgCyan).SprintFunc()
 

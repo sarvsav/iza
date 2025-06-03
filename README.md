@@ -122,8 +122,8 @@ Available commands for different services are listed below.
 
 | Command | MongoDB | PostgreSQL | Jenkins | JFrog |
 | ------- | ------- | ---------- | ------- | ----- |
-| `cat`   |    ❌   |     ❌     |    ❌   |   ❌  |
-| `du`    |    ❌   |     ❌     |    ❌   |   ❌  |
+| `cat`   |    ✅   |     ❌     |    ❌   |   ❌  |
+| `du`    |    ✅   |     ❌     |    ❌   |   ❌  |
 | `ls`    |    ✅   |     ❌     |    ❌   |   ❌  |
 | `touch` |    ✅   |     ❌     |    ❌   |   ❌  |
 | `whoami`|    ✅   |     ❌     |    ❌   |   ❌  |

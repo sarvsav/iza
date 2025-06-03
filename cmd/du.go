@@ -11,7 +11,7 @@ func WithDuArgs(args []string) models.OptionsDuFunc {
 	return func(c *models.DuOptions) error { c.Args = args; return nil }
 }
 
-func prettyPrint(result models.MongoDBDuResponse) {
+func prettyPrint(result models.DatabaseDuResponseData) {
 	if result.Collection == "" {
 		fmt.Println(result.Size, result.Database)
 	} else {

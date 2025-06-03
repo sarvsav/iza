@@ -3,10 +3,13 @@ package datastore
 import "github.com/sarvsav/iza/models"
 
 // Du returns the disk usage of the specified database or collection.
-func (ds *DataStoreService) Du(duOptions ...models.OptionsDuFunc) (models.MongoDBDuResponse, error) {
+func (ds *DataStoreService) Du(duOptions ...models.OptionsDuFunc) (models.DatabaseDuResponseData, error) {
 	result, err := ds.dataStore.Du(duOptions...)
 	if err != nil {
-		return models.MongoDBDuResponse{}, err
+		return models.DatabaseDuResponseData{}, err
 	}
-	return result, nil
+
+	resultData, _ := result.GetDuResult()
+
+	return resultData, nil
 }
