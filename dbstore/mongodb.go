@@ -88,8 +88,8 @@ func (m *mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.
 	}, nil
 }
 
-func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResponse, error) {
-	var result models.MongoDBLsResponse
+func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.DatabaseLsResponse, error) {
+	var result models.MongoDBResult
 	lsCmd := &models.LsOptions{
 		LongListing: false,
 		Color:       false,
@@ -98,7 +98,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResp
 
 	for _, opt := range lsOptions {
 		if err := opt(lsCmd); err != nil {
-			return models.MongoDBLsResponse{}, err
+			return models.MongoDBResult{}, err
 		}
 	}
 
@@ -117,7 +117,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResp
 			log.Panic(err)
 		}
 		m.log.Debug(context.Background(), "List of databases", "db", dbList)
-		var database models.MongoDBDatabase
+		var database models.DatabaseDatabaseData
 		for _, dbName := range dbList {
 			database.Name = dbName
 			database.Perms = "rw-rw-rw-"       // Placeholder, as MongoDB does not provide permissions in ListDatabaseNames
@@ -125,7 +125,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResp
 			database.Group = "root"            // Placeholder, as MongoDB does not provide owner/group in ListDatabaseNames
 			database.Size = 0                  // Placeholder, as MongoDB does not provide size in ListDatabaseNames
 			database.LastModified = time.Now() // Placeholder, as MongoDB does not provide last modified in ListDatabaseNames
-			result.Databases = append(result.Databases, database)
+			result.MongoDBLsResponse.DatabaseDatabases = append(result.MongoDBLsResponse.DatabaseDatabases, database)
 		}
 	}
 
@@ -143,7 +143,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResp
 				m.log.Error(context.Background(), "Failed to list collections", "error", err)
 			}
 			m.log.Debug(context.Background(), "List of collections", "db", dbName, "collections", collections)
-			result.Databases = []models.MongoDBDatabase{
+			result.MongoDBLsResponse.DatabaseDatabases = []models.DatabaseDatabaseData{
 				{
 					Name:         dbName,
 					Perms:        "rw-rw-rw-", // Placeholder, as MongoDB does not provide permissions in ListDatabaseNames
@@ -153,7 +153,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResp
 					LastModified: time.Now(),  // Placeholder, as MongoDB does not provide last modified in ListDatabaseNames
 				},
 			}
-			var collection models.MongoDBCollection
+			var collection models.DatabaseCollectionData
 			for _, collectionName := range collections {
 				collection.Name = collectionName
 				collection.Perms = "rw-rw-rw-"       // Placeholder, as MongoDB does not provide permissions in ListCollectionNames
@@ -161,7 +161,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResp
 				collection.Group = "root"            // Placeholder, as MongoDB does not provide owner/group in ListCollectionNames
 				collection.Size = 0                  // Placeholder, as MongoDB does not provide size in ListCollectionNames
 				collection.LastModified = time.Now() // Placeholder, as MongoDB does not provide last modified in ListCollectionNames
-				result.Collections = append(result.Collections, collection)
+				result.MongoDBLsResponse.DatabaseCollections = append(result.MongoDBLsResponse.DatabaseCollections, collection)
 			}
 		}
 		if len(argParts) == 2 {
@@ -172,7 +172,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResp
 			if err != nil {
 				m.log.Error(context.Background(), "Failed to list collection info", "error", err)
 			}
-			result.Databases = []models.MongoDBDatabase{
+			result.MongoDBLsResponse.DatabaseDatabases = []models.DatabaseDatabaseData{
 				{
 					Name:         dbName,
 					Perms:        "rw-rw-rw-", // Placeholder, as MongoDB does not provide permissions in ListCollectionNames
@@ -182,7 +182,7 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResp
 					LastModified: time.Now(),  // Placeholder, as MongoDB does not provide last modified in ListCollectionNames
 				},
 			}
-			result.Collections = []models.MongoDBCollection{
+			result.MongoDBLsResponse.DatabaseCollections = []models.DatabaseCollectionData{
 				{
 					Name:         collectionName,
 					Perms:        "rw-rw-rw-", // Placeholder, as MongoDB does not provide permissions in ListCollectionNames
@@ -202,9 +202,9 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResp
 					m.log.Error(context.Background(), "Index name is not a string", "index", index)
 					continue
 				}
-				result.Indexes = append(result.Indexes, models.MongoDBIndex{Name: indexName})
+				result.MongoDBLsResponse.DatabaseIndexes = append(result.MongoDBLsResponse.DatabaseIndexes, models.DatabaseIndexData{Name: indexName})
 			}
-			m.log.Debug(context.Background(), "List of indexes", "db", dbName, "collection", collectionName, "indexes", result.Indexes)
+			m.log.Debug(context.Background(), "List of indexes", "db", dbName, "collection", collectionName, "indexes", result.MongoDBLsResponse.DatabaseIndexes)
 		}
 	}
 	return result, nil

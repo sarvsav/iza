@@ -42,7 +42,7 @@ func (j jFrogClient) Ls(lsOptions ...models.OptionsLsFunc) (models.ArtifactoryLs
 	}
 
 	return models.JFrogResult{
-		JFrogResponse: models.ArtifactoryLsResponseData{
+		JFrogLsResponse: models.ArtifactoryLsResponseData{
 			ArtifactoryRepos: []models.ArtifactoryRepoData{
 				{
 					Name:         "repo1",

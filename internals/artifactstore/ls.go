@@ -8,7 +8,7 @@ func (as *ArtifactoryService) Ls(lsOptions ...models.OptionsLsFunc) (models.Arti
 		return models.ArtifactoryLsResponseData{}, err
 	}
 
-	resultData, _ := result.GetResult()
+	resultData, _ := result.GetLsResult()
 
 	return resultData, nil
 }

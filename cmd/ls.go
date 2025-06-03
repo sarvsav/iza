@@ -136,10 +136,10 @@ It will list:
 				fmt.Println(err)
 				return
 			}
-			for _, db := range result.Databases {
+			for _, db := range result.DatabaseDatabases {
 				printEntry("d", db.Name, db.Perms, db.Owner, db.Group, db.Size, db.LastModified)
 			}
-			for _, col := range result.Collections {
+			for _, col := range result.DatabaseCollections {
 				printEntry(".", col.Name, col.Perms, col.Owner, col.Group, col.Size, col.LastModified)
 			}
 		default:

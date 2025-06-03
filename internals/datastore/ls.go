@@ -5,11 +5,13 @@ import (
 )
 
 // WhoAmI returns the username of the current user from the datastore.
-func (ds *DataStoreService) Ls(lsOptions ...models.OptionsLsFunc) (models.MongoDBLsResponse, error) {
+func (ds *DataStoreService) Ls(lsOptions ...models.OptionsLsFunc) (models.DatabaseLsResponseData, error) {
 	result, err := ds.dataStore.Ls(lsOptions...)
 	if err != nil {
-		return models.MongoDBLsResponse{}, err
+		return models.DatabaseLsResponseData{}, err
 	}
 
-	return result, nil
+	resultData, _ := result.GetLsResult()
+
+	return resultData, nil
 }

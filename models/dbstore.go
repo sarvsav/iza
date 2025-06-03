@@ -2,13 +2,13 @@ package models
 
 import "time"
 
-type ArtifactoryLsResponseData struct {
-	ArtifactoryRepos   []ArtifactoryRepoData
-	ArtifactoryFolders []ArtifactoryFolderData
-	ArtifactoryFiles   []ArtifactoryFileData
+type DatabaseLsResponseData struct {
+	DatabaseDatabases   []DatabaseDatabaseData
+	DatabaseCollections []DatabaseCollectionData
+	DatabaseIndexes     []DatabaseIndexData
 }
 
-type ArtifactoryRepoData struct {
+type DatabaseDatabaseData struct {
 	Name         string
 	Size         int64     // In bytes
 	Perms        string    // Permissions (read/stop/start/create/configure)
@@ -17,7 +17,7 @@ type ArtifactoryRepoData struct {
 	LastModified time.Time // Last run
 }
 
-type ArtifactoryFolderData struct {
+type DatabaseCollectionData struct {
 	Name         string
 	Size         int64     // In bytes
 	Perms        string    // Permissions (read/stop/start/create/configure)
@@ -26,7 +26,7 @@ type ArtifactoryFolderData struct {
 	LastModified time.Time // Last run
 }
 
-type ArtifactoryFileData struct {
+type DatabaseIndexData struct {
 	Name         string
 	Size         int64     // In bytes
 	Perms        string    // Permissions (read/stop/start/create/configure)
@@ -35,7 +35,7 @@ type ArtifactoryFileData struct {
 	LastModified time.Time // Last run
 }
 
-type ArtifactoryLsResponse interface {
-	GetLsResult() (ArtifactoryLsResponseData, error)
-	isArtifactoryLsResponse() // marker method
+type DatabaseLsResponse interface {
+	GetLsResult() (DatabaseLsResponseData, error)
+	isDatabaseLsResponse() // marker method
 }

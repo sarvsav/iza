@@ -33,13 +33,13 @@ type Errors struct {
 }
 
 type JFrogResult struct {
-	JFrogResponse ArtifactoryLsResponseData
+	JFrogLsResponse ArtifactoryLsResponseData
 }
 
 func (jfr JFrogResult) isArtifactoryLsResponse() {
 	// marker function
 }
 
-func (jfr JFrogResult) GetResult() (ArtifactoryLsResponseData, error) {
-	return jfr.JFrogResponse, nil
+func (jfr JFrogResult) GetLsResult() (ArtifactoryLsResponseData, error) {
+	return jfr.JFrogLsResponse, nil
 }
