@@ -125,6 +125,7 @@ Available commands for different services are listed below.
 | `cat`   |    ✅   |     ❌     |    ❌   |   ❌  |
 | `du`    |    ✅   |     ❌     |    ❌   |   ❌  |
 | `ls`    |    ✅   |     ❌     |    ❌   |   ❌  |
+| `mkdir` |    ❌   |     ❌     |    ❌   |   ❌  |
 | `touch` |    ✅   |     ❌     |    ❌   |   ❌  |
 | `whoami`|    ✅   |     ❌     |    ❌   |   ❌  |
 
