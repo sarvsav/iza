@@ -35,7 +35,15 @@ type DatabaseIndexData struct {
 	LastModified time.Time // Last run
 }
 
+type DatabaseWhoAmIResponseData struct {
+	Username string
+}
+
 type DatabaseLsResponse interface {
 	GetLsResult() (DatabaseLsResponseData, error)
 	isDatabaseLsResponse() // marker method
+}
+
+type DatabaseWhoAmIResponse interface {
+	GetWhoAmIResult() (DatabaseWhoAmIResponseData, error)
 }

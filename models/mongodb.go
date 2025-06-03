@@ -19,12 +19,9 @@ type MongoDBTouchResponse struct {
 	Name []string
 }
 
-type MongoDBWhoAmIResponse struct {
-	Username string
-}
-
 type MongoDBResult struct {
-	MongoDBLsResponse DatabaseLsResponseData
+	MongoDBLsResponse     DatabaseLsResponseData
+	MongoDBWhoAmIResponse DatabaseWhoAmIResponseData
 }
 
 func (mr MongoDBResult) isDatabaseLsResponse() {
@@ -33,4 +30,8 @@ func (mr MongoDBResult) isDatabaseLsResponse() {
 
 func (mr MongoDBResult) GetLsResult() (DatabaseLsResponseData, error) {
 	return mr.MongoDBLsResponse, nil
+}
+
+func (mr MongoDBResult) GetWhoAmIResult() (DatabaseWhoAmIResponseData, error) {
+	return mr.MongoDBWhoAmIResponse, nil
 }
