@@ -149,6 +149,57 @@ func (m mongoClient) Ls(lsOptions ...models.OptionsLsFunc) (models.DatabaseLsRes
 	return result, nil
 }
 
+// Touch is equivalent to the touch command in Unix-like systems.
+// It is used to create an empty collection in the database.
+func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.DatabaseTouchResponse, error) {
+
+	var dbName, collectionName string
+	var result models.MongoDBResult
+
+	touchCmd := &models.TouchOptions{
+		Args: []string{},
+	}
+
+	for _, opt := range touchOptions {
+		if err := opt(touchCmd); err != nil {
+			return models.MongoDBResult{}, err
+		}
+	}
+
+	m.log.Debug(context.Background(), "provided command with options", "args", touchCmd.Args)
+	if len(touchCmd.Args) == 0 {
+		m.log.Error(context.Background(), "Expected format is database/collection", "received", "empty")
+		return models.MongoDBResult{}, errors.New("expected format: iza touch database/collection")
+	}
+
+	// Iterate the arguments and create a collection for each
+	for _, arg := range touchCmd.Args {
+		// Extract db and collection names from the argument
+		argParts := strings.Split(arg, "/")
+		if len(argParts) > 2 {
+			m.log.Error(context.Background(), "Expected format is database/collection", "received", arg)
+		}
+		if len(argParts) == 1 {
+			m.log.Info(context.Background(), "No database provided, creating inside test", "received", arg)
+			dbName = "test"
+			collectionName = argParts[0]
+		}
+		if len(argParts) == 2 {
+			m.log.Debug(context.Background(), "Creating empty collection", "received", arg)
+			dbName = argParts[0]
+			collectionName = argParts[1]
+		}
+
+		if err := m.mc.Database(dbName).CreateCollection(context.TODO(), collectionName); err != nil {
+			m.log.Error(context.Background(), "Failed to create collection", "error", err)
+		}
+		m.log.Debug(context.Background(), "Successfully created empty collection", "dbName", dbName, "collection", collectionName)
+		result.MongoDBTouchResponse.Name = append(result.MongoDBTouchResponse.Name, dbName+"/"+collectionName)
+	}
+
+	return result, nil
+}
+
 // WhoAmI is equivalent to the whoami command.
 // It prints the current logged in user.
 func (m *mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.DatabaseWhoAmIResponse, error) {
@@ -274,57 +325,6 @@ func (m mongoClient) Du(duOptions ...models.OptionsDuFunc) (models.MongoDBDuResp
 			}
 		}
 	}
-	return result, nil
-}
-
-// Touch is equivalent to the touch command in Unix-like systems.
-// It is used to create an empty collection in the database.
-func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.MongoDBTouchResponse, error) {
-
-	var dbName, collectionName string
-	var result models.MongoDBTouchResponse
-
-	touchCmd := &models.TouchOptions{
-		Args: []string{},
-	}
-
-	for _, opt := range touchOptions {
-		if err := opt(touchCmd); err != nil {
-			return models.MongoDBTouchResponse{}, err
-		}
-	}
-
-	m.log.Debug(context.Background(), "provided command with options", "args", touchCmd.Args)
-	if len(touchCmd.Args) == 0 {
-		m.log.Error(context.Background(), "Expected format is database/collection", "received", "empty")
-		return models.MongoDBTouchResponse{}, errors.New("expected format: iza touch database/collection")
-	}
-
-	// Iterate the arguments and create a collection for each
-	for _, arg := range touchCmd.Args {
-		// Extract db and collection names from the argument
-		argParts := strings.Split(arg, "/")
-		if len(argParts) > 2 {
-			m.log.Error(context.Background(), "Expected format is database/collection", "received", arg)
-		}
-		if len(argParts) == 1 {
-			m.log.Info(context.Background(), "No database provided, creating inside test", "received", arg)
-			dbName = "test"
-			collectionName = argParts[0]
-		}
-		if len(argParts) == 2 {
-			m.log.Debug(context.Background(), "Creating empty collection", "received", arg)
-			dbName = argParts[0]
-			collectionName = argParts[1]
-		}
-
-		if err := m.mc.Database(dbName).CreateCollection(context.TODO(), collectionName); err != nil {
-			m.log.Error(context.Background(), "Failed to create collection", "error", err)
-		}
-		m.log.Debug(context.Background(), "Successfully created empty collection", "dbName", dbName, "collection", collectionName)
-		result.Name = append(result.Name, dbName+"/"+collectionName)
-	}
-
 	return result, nil
 }
 

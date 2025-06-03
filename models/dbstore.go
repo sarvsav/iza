@@ -39,6 +39,10 @@ type DatabaseWhoAmIResponseData struct {
 	Username string
 }
 
+type DatabaseTouchResponseData struct {
+	Name []string
+}
+
 type DatabaseLsResponse interface {
 	GetLsResult() (DatabaseLsResponseData, error)
 	isDatabaseLsResponse() // marker method
@@ -46,4 +50,8 @@ type DatabaseLsResponse interface {
 
 type DatabaseWhoAmIResponse interface {
 	GetWhoAmIResult() (DatabaseWhoAmIResponseData, error)
+}
+
+type DatabaseTouchResponse interface {
+	GetTouchResult() (DatabaseTouchResponseData, error)
 }

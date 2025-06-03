@@ -15,13 +15,10 @@ type MongoDBDuResponse struct {
 	Size       int64  `json:"size"`
 }
 
-type MongoDBTouchResponse struct {
-	Name []string
-}
-
 type MongoDBResult struct {
 	MongoDBLsResponse     DatabaseLsResponseData
 	MongoDBWhoAmIResponse DatabaseWhoAmIResponseData
+	MongoDBTouchResponse  DatabaseTouchResponseData
 }
 
 func (mr MongoDBResult) isDatabaseLsResponse() {
@@ -30,6 +27,10 @@ func (mr MongoDBResult) isDatabaseLsResponse() {
 
 func (mr MongoDBResult) GetLsResult() (DatabaseLsResponseData, error) {
 	return mr.MongoDBLsResponse, nil
+}
+
+func (mr MongoDBResult) GetTouchResult() (DatabaseTouchResponseData, error) {
+	return mr.MongoDBTouchResponse, nil
 }
 
 func (mr MongoDBResult) GetWhoAmIResult() (DatabaseWhoAmIResponseData, error) {

@@ -122,11 +122,11 @@ Available commands for different services are listed below.
 
 | Command | MongoDB | PostgreSQL | Jenkins | JFrog |
 | ------- | ------- | ---------- | ------- | ----- |
-| `cat`   |    ✅   |     ❌     |    ❌    |   ❌   |
-| `du`    |    ❌   |     ❌     |    ❌    |   ❌   |
-| `ls`    |    ❌   |     ❌     |    ❌    |   ❌   |
-| `touch` |    ❌   |     ❌     |    ❌    |   ❌   |
-| `whoami`|    ❌   |     ❌     |    ❌    |   ❌   |
+| `cat`   |    ❌   |     ❌     |    ❌   |   ❌  |
+| `du`    |    ❌   |     ❌     |    ❌   |   ❌  |
+| `ls`    |    ✅   |     ❌     |    ❌   |   ❌  |
+| `touch` |    ✅   |     ❌     |    ❌   |   ❌  |
+| `whoami`|    ✅   |     ❌     |    ❌   |   ❌  |
 
 <!-- USAGE EXAMPLES -->
 ## Usage

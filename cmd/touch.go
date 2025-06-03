@@ -11,7 +11,7 @@ func WithTouchArgs(args []string) models.OptionsTouchFunc {
 	return func(c *models.TouchOptions) error { c.Args = args; return nil }
 }
 
-func prettyPrintTouch(results models.MongoDBTouchResponse) {
+func prettyPrintTouch(results models.DatabaseTouchResponseData) {
 	if len(results.Name) == 0 {
 		fmt.Println("No collections created.")
 		return
