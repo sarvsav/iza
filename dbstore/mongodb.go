@@ -331,7 +331,7 @@ func (m mongoClient) Touch(touchOptions ...models.OptionsTouchFunc) (models.Data
 
 // WhoAmI is equivalent to the whoami command.
 // It prints the current logged in user.
-func (m *mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.DatabaseWhoAmIResponse, error) {
+func (m mongoClient) WhoAmI(whoAmIOptions ...models.OptionsWhoAmIFunc) (models.DatabaseWhoAmIResponse, error) {
 
 	var username string
 

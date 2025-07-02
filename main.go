@@ -23,7 +23,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 	"os"
 
@@ -32,6 +31,7 @@ import (
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/sarvsav/iza/artifactory"
 	"github.com/sarvsav/iza/client"
@@ -62,7 +62,7 @@ type NamedMongoClient struct {
 
 type NamedPostgresClient struct {
 	Name   string
-	Client *sql.DB
+	Client *pgxpool.Pool
 }
 
 type NamedHTTPClient struct {
@@ -167,7 +167,17 @@ func main() {
 					clientRegistry.Mongo = append(clientRegistry.Mongo, NamedMongoClient{Name: clientName, Client: mc})
 				case "postgres":
 					clientName := selector.String()
-					clientRegistry.Postgres = append(clientRegistry.Postgres, NamedPostgresClient{Name: clientName, Client: nil})
+					pc, err := client.GetPostgresClient()
+					defer func() {
+						if err := client.DisconnectPostgresClient(pc); err != nil {
+							log.Error(context.Background(), "Failed to disconnect from Postgres", "error", err)
+						}
+					}()
+					if err != nil {
+						log.Error(context.Background(), "Failed to connect to Postgres", "error", err)
+						return
+					}
+					clientRegistry.Postgres = append(clientRegistry.Postgres, NamedPostgresClient{Name: clientName, Client: pc})
 				default:
 					log.Debug(context.Background(), "Unknown database type", "type", kind)
 				}
@@ -241,6 +251,7 @@ func main() {
 	jFrogClient := artifactory.NewJFrogClient(clientRegistry.JFrog[0].Client, log)
 	jenkinsClient := devops.NewJenkinsClient(clientRegistry.Jenkins[0].Client, log)
 	mongoClient := dbstore.NewMongoClient(clientRegistry.Mongo[0].Client, log)
+	//postgresClient := dbstore.NewPostgresClient(clientRegistry.Postgres[0].Client, log)
 	app := &app.Application{
 		ArtifactoryService: artifactstore.NewArtifactoryService(jFrogClient, log),
 		CiCdService:        cicd.NewCiCdService(jenkinsClient, log),

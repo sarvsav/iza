@@ -127,7 +127,7 @@ Available commands for different services are listed below.
 | `ls`    |    ✅   |     ❌     |    ❌   |   ❌  |
 | `mkdir` |    ❌   |     ❌     |    ❌   |   ❌  |
 | `touch` |    ✅   |     ❌     |    ❌   |   ❌  |
-| `whoami`|    ✅   |     ❌     |    ❌   |   ❌  |
+| `whoami`|    ✅   |     ✅     |    ❌   |   ❌  |
 
 <!-- USAGE EXAMPLES -->
 ## Usage
