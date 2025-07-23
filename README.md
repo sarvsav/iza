@@ -10,6 +10,7 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/sarvsav/iza/badge)](https://scorecard.dev/viewer/?uri=github.com/sarvsav/iza)
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
