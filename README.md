@@ -130,7 +130,7 @@ Available commands for different services are listed below.
 | `touch` |    ✅   |     ❌     |    ❌   |   ❌  |
 | `whoami`|    ✅   |     ✅     |    ❌   |   ❌  |
 
-See full features tables [here](https://sarvsav.github.io/iza/).
+See full available commands [here](https://sarvsav.github.io/iza/getting-started/features/).
 
 <!-- USAGE EXAMPLES -->
 ## Usage

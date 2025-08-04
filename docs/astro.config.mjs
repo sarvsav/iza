@@ -10,8 +10,8 @@ export default defineConfig({
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/sarvsav/iza'},
 				{ icon: 'twitter', label: 'Twitter', href: 'https://twitter.com/sarvsav' },
+				{ icon: 'discord', label: 'Discord', href: 'https://discord.gg/wYzwqVUs' },
 				// codeberg: 'https://codeberg.org/knut/examples',
-				// discord: 'https://astro.build/chat',
 				// gitlab: 'https://gitlab.com/delucis',
 				// linkedin: 'https://www.linkedin.com/company/astroinc',
 				// mastodon: 'https://m.webtoo.ls/@astro',
@@ -26,6 +26,7 @@ export default defineConfig({
 					label: 'Getting started',
 					items: [
 						{ label: 'Installation', slug: 'getting-started/installation' },
+						{ label: 'Features', slug: 'getting-started/features' },
 						{ label: 'Configuration', slug: 'getting-started/configuration' },
 					],
 				},
