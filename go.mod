@@ -1,6 +1,6 @@
 module github.com/sarvsav/iza
 
-go 1.24.0
+go 1.24.5
 
 require (
 	cuelang.org/go v0.14.0
