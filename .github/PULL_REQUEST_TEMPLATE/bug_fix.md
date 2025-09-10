@@ -4,6 +4,14 @@
 
 Provide a concise description of the bug and the fix.
 
+## Reproduction Steps
+
+Outline the steps you took to reproduce the bug. Be sure not to forget any steps and that they are in the right order:
+
+1.
+2.
+3.
+
 ## Issue Link
 
 Link to the issue being addressed.
@@ -39,3 +47,5 @@ Assess the risk of regression caused by this fix and steps taken to mitigate it.
 ## Additional Notes
 
 Any further information needed to understand the fix or its impact.
+
+## Thank you for squashing this bug

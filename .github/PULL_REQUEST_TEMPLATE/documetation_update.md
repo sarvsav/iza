@@ -33,3 +33,5 @@ Include before and after screenshots for significant visual changes, if applicab
 ## Additional Notes
 
 Any other information that might be helpful for reviewers.
+
+## Thank you for keeping the documentation up to date
