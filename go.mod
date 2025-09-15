@@ -5,7 +5,7 @@ go 1.24.5
 require (
 	cuelang.org/go v0.14.1
 	github.com/charmbracelet/bubbles v0.21.0
-	github.com/charmbracelet/bubbletea v1.3.7
+	github.com/charmbracelet/bubbletea v1.3.9
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/fatih/color v1.18.0
 	github.com/jackc/pgx/v5 v5.7.5
@@ -73,6 +73,6 @@ require (
 	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
