@@ -5,7 +5,7 @@ go 1.24.5
 require (
 	cuelang.org/go v0.14.1
 	github.com/charmbracelet/bubbles v0.21.0
-	github.com/charmbracelet/bubbletea v1.3.9
+	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/fatih/color v1.18.0
 	github.com/jackc/pgx/v5 v5.7.6
