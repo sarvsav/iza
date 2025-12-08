@@ -10,7 +10,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/joho/godotenv v1.5.1
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/text v0.30.0
